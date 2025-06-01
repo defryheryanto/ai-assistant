@@ -19,3 +19,8 @@
 
 # Go workspace file
 go.work
+.env
+credentials.json
+token.json
+.vscode/*
+
