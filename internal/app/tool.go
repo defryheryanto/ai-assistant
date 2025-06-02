@@ -19,10 +19,10 @@ type SetupToolsParams struct {
 	OpenAIModel string
 }
 
-func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, error) {
-	srv, err := setupServices(ctx, params)
+func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *Services, error) {
+	srv, err := SetupServices(ctx, params)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	llm, err := openai.New(
@@ -30,16 +30,16 @@ func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, e
 		openai.WithModel(params.OpenAIModel),
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	toolRegistry := tools.NewRegistry(llm, true)
 	registerTools(toolRegistry, srv)
 
-	return toolRegistry, nil
+	return toolRegistry, srv, nil
 }
 
-func registerTools(registry tools.Registry, srv *services) {
+func registerTools(registry tools.Registry, srv *Services) {
 	registry.Register(calendartool.NewCreateEventTool(srv.CalendarService))
 	registry.Register(timetool.NewCurrentTimeTool())
 }

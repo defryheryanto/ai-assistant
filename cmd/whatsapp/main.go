@@ -19,7 +19,7 @@ func main() {
 		panic(fmt.Sprintf("failed to setup whatsmeow client: %v", err))
 	}
 
-	toolRegistry, err := app.SetupTools(ctx, app.SetupToolsParams{
+	toolRegistry, services, err := app.SetupTools(ctx, app.SetupToolsParams{
 		GoogleCredentialsFilePath: config.GoogleCredentialsFilePath,
 		GoogleTokenFilePath:       config.GoogleTokenFilePath,
 		OpenAIToken:               config.OpenAIToken,
@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to setup service: %v", err))
 	}
-	client.AddEventHandler(eventHandler(ctx, client, toolRegistry))
+	client.AddEventHandler(eventHandler(ctx, client, toolRegistry, services))
 
 	connectWhatsmeowClient(client)
 

@@ -13,7 +13,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	toolRegistry, err := app.SetupTools(ctx, app.SetupToolsParams{
+	toolRegistry, _, err := app.SetupTools(ctx, app.SetupToolsParams{
 		GoogleCredentialsFilePath: config.GoogleCredentialsFilePath,
 		GoogleTokenFilePath:       config.GoogleTokenFilePath,
 		OpenAIToken:               config.OpenAIToken,
