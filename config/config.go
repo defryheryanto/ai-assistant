@@ -6,6 +6,8 @@ var (
 
 	OpenAIToken string
 	OpenAIModel string
+
+	WhatsmeowSQLPath string
 )
 
 func Init() {
@@ -14,4 +16,6 @@ func Init() {
 
 	OpenAIToken = getString("OPEN_AI_TOKEN", "")
 	OpenAIModel = getString("OPEN_AI_MODEL", "")
+
+	WhatsmeowSQLPath = getString("WHATSMEOW_SQL_PATH", "")
 }
