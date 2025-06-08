@@ -64,7 +64,7 @@ func (t *CreateUserTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*
 				llms.ToolCallResponse{
 					ToolCallID: toolCall.ID,
 					Name:       toolCall.FunctionCall.Name,
-					Content:    "You did not have permission to create user",
+					Content:    "The requestor did not have permission to create user",
 				},
 			},
 		}, nil
