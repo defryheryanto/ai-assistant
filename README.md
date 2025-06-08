@@ -40,7 +40,7 @@ or build the application binary<br>
 - Registry<br>
 Centralized struct to register and execute tools, supporting integration with any LLM that implements `llms.Model`.
 - Tool Interface<br>
-Implement `Definition()` and `Execute()` to build your own tools.
+Implement `Tool` [interface](https://github.com/defryheryanto/ai-assistant/blob/cffc53f22279208a31233f1bf896621cb018960c/pkg/tools/registry.go#L10) in `pkg/tools/registry.go` to build your own tools.
 
 ### Custom Tool Integration
 Visit [weather-forecast](https://github.com/defryheryanto/ai-assistant/tree/main/example/weather-forecast) example to see the implementation for custom tool
