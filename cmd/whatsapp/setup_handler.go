@@ -8,6 +8,7 @@ import (
 
 	"github.com/defryheryanto/ai-assistant/config"
 	"github.com/defryheryanto/ai-assistant/internal/app"
+	"github.com/defryheryanto/ai-assistant/internal/user"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	"github.com/openai/openai-go"
 	"go.mau.fi/whatsmeow"
@@ -35,6 +36,8 @@ func eventHandler(ctx context.Context, client *whatsmeow.Client, toolRegistry to
 				if usr == nil {
 					return
 				}
+
+				ctx = user.SetUserToContext(ctx, usr)
 			}
 
 			textMessage := ""

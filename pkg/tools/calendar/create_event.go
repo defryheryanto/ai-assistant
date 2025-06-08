@@ -71,7 +71,7 @@ func (t *CreateEventTool) Execute(ctx context.Context, toolCall llms.ToolCall) (
 		return nil, err
 	}
 
-	eventLink, err := t.calendarService.CreateEvent(args)
+	eventLink, err := t.calendarService.CreateEvent(ctx, args)
 	if err != nil {
 		return nil, err
 	}

@@ -64,7 +64,7 @@ func (s *GoogleCalendarService) getUserEmail() (string, error) {
 	return "", nil
 }
 
-func (s *GoogleCalendarService) CreateEvent(params calendar.CreateEventParams) (string, error) {
+func (s *GoogleCalendarService) CreateEvent(ctx context.Context, params calendar.CreateEventParams) (string, error) {
 	userEmail, err := s.getUserEmail()
 	if err != nil {
 		return "", err

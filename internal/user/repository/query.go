@@ -6,7 +6,8 @@ const (
 			id,
 			name,
 			whatsapp_jid,
-			role
+			role,
+			email
 		FROM users
 		WHERE whatsapp_jid = $1;
 	`

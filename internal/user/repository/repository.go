@@ -24,6 +24,7 @@ func (r *Repository) FindUserByWhatsAppJID(ctx context.Context, jid string) (*us
 		&res.Name,
 		&res.WhatsAppJID,
 		&res.Role,
+		&res.Email,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
