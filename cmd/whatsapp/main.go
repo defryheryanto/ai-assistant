@@ -19,7 +19,10 @@ func main() {
 		panic(fmt.Sprintf("failed to setup whatsmeow client: %v", err))
 	}
 
+	db := setupDatabaseConnection()
+
 	toolRegistry, services, err := app.SetupTools(ctx, app.SetupToolsParams{
+		DB:                        db,
 		GoogleCredentialsFilePath: config.GoogleCredentialsFilePath,
 		GoogleTokenFilePath:       config.GoogleTokenFilePath,
 		OpenAIToken:               config.OpenAIToken,

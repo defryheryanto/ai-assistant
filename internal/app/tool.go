@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	calendartool "github.com/defryheryanto/ai-assistant/pkg/tools/calendar"
@@ -10,6 +11,8 @@ import (
 )
 
 type SetupToolsParams struct {
+	DB *sql.DB
+
 	// CalendarService
 	GoogleCredentialsFilePath string
 	GoogleTokenFilePath       string

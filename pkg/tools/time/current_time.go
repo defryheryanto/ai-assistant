@@ -1,6 +1,7 @@
 package time
 
 import (
+	"context"
 	"time"
 
 	"github.com/tmc/langchaingo/llms"
@@ -22,7 +23,7 @@ func (t *CurrentTimeTool) Definition() llms.Tool {
 	}
 }
 
-func (t *CurrentTimeTool) Execute(toolCall llms.ToolCall) (*llms.MessageContent, error) {
+func (t *CurrentTimeTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error) {
 	return &llms.MessageContent{
 		Role: llms.ChatMessageTypeTool,
 		Parts: []llms.ContentPart{

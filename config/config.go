@@ -1,6 +1,9 @@
 package config
 
 var (
+	DatabaseConnectionString string
+	IsUserWhitelistEnabled   bool
+
 	GoogleCredentialsFilePath string
 	GoogleTokenFilePath       string
 
@@ -11,6 +14,9 @@ var (
 )
 
 func Init() {
+	DatabaseConnectionString = getString("DATABASE_CONNECTION_STRING", "")
+	IsUserWhitelistEnabled = getBool("IS_USER_WHITELIST_ENABLED", false)
+
 	GoogleCredentialsFilePath = getString("GOOGLE_CREDENTIALS_FILEPATH", "")
 	GoogleTokenFilePath = getString("GOOGLE_TOKEN_FILEPATH", "")
 

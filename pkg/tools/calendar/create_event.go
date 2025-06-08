@@ -1,6 +1,7 @@
 package calendar
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -64,7 +65,7 @@ func (t *CreateEventTool) Definition() llms.Tool {
 	}
 }
 
-func (t *CreateEventTool) Execute(toolCall llms.ToolCall) (*llms.MessageContent, error) {
+func (t *CreateEventTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error) {
 	var args calendar.CreateEventParams
 	if err := json.Unmarshal([]byte(toolCall.FunctionCall.Arguments), &args); err != nil {
 		return nil, err

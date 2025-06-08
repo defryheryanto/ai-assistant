@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/defryheryanto/ai-assistant/config"
 	"github.com/defryheryanto/ai-assistant/internal/app"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	"github.com/openai/openai-go"
@@ -23,6 +24,17 @@ func eventHandler(ctx context.Context, client *whatsmeow.Client, toolRegistry to
 			chatJID := v.Info.MessageSource.Chat.String()
 			if !strings.HasSuffix(chatJID, "@s.whatsapp.net") {
 				return
+			}
+
+			if config.IsUserWhitelistEnabled {
+				usr, err := services.UserService.GetUserByWhatsAppJID(ctx, chatJID)
+				if err != nil {
+					log.Printf("error getting user: %v\n", err)
+					return
+				}
+				if usr == nil {
+					return
+				}
 			}
 
 			textMessage := ""

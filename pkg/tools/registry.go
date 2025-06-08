@@ -9,7 +9,7 @@ import (
 
 type Tool interface {
 	Definition() llms.Tool
-	Execute(toolCall llms.ToolCall) (*llms.MessageContent, error)
+	Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error)
 }
 
 type Registry interface {
@@ -46,7 +46,7 @@ func (r *registry) GetTools() []llms.Tool {
 	return toolDefinitions
 }
 
-func (r *registry) executeTool(messageHistory []llms.MessageContent, resp *llms.ContentResponse) ([]llms.MessageContent, error) {
+func (r *registry) executeTool(ctx context.Context, messageHistory []llms.MessageContent, resp *llms.ContentResponse) ([]llms.MessageContent, error) {
 	for _, choice := range resp.Choices {
 		for _, toolCall := range choice.ToolCalls {
 			assistantResponse := llms.MessageContent{
@@ -68,7 +68,7 @@ func (r *registry) executeTool(messageHistory []llms.MessageContent, resp *llms.
 			for _, toolFunc := range r.toolFunctions {
 				if toolCall.FunctionCall.Name == toolFunc.Definition().Function.Name {
 					r.log(fmt.Sprintf("calling tool %s", toolCall.FunctionCall.Name))
-					toolResponse, err := toolFunc.Execute(toolCall)
+					toolResponse, err := toolFunc.Execute(ctx, toolCall)
 					if err != nil {
 						return nil, err
 					}
@@ -104,7 +104,7 @@ func (r *registry) Execute(ctx context.Context, inquiry string) (string, error) 
 			return resp.Choices[0].Content, nil
 		}
 
-		messageHistory, err = r.executeTool(messageHistory, resp)
+		messageHistory, err = r.executeTool(ctx, messageHistory, resp)
 		if err != nil {
 			return "", err
 		}

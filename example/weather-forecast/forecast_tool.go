@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -43,7 +44,7 @@ func (t *ForecastTool) Definition() llms.Tool {
 	}
 }
 
-func (t *ForecastTool) Execute(toolCall llms.ToolCall) (*llms.MessageContent, error) {
+func (t *ForecastTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error) {
 	var args ForecastParams
 	if err := json.Unmarshal([]byte(toolCall.FunctionCall.Arguments), &args); err != nil {
 		return nil, err
