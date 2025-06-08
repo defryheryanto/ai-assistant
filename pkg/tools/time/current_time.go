@@ -13,6 +13,10 @@ func NewCurrentTimeTool() *CurrentTimeTool {
 	return &CurrentTimeTool{}
 }
 
+func (t *CurrentTimeTool) SystemPrompt() string {
+	return ""
+}
+
 func (t *CurrentTimeTool) Definition() llms.Tool {
 	return llms.Tool{
 		Type: "function",

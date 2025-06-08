@@ -20,6 +20,10 @@ func NewForecastTool() *ForecastTool {
 	return &ForecastTool{}
 }
 
+func (t *ForecastTool) SystemPrompt() string {
+	return ""
+}
+
 func (t *ForecastTool) Definition() llms.Tool {
 	return llms.Tool{
 		Type: "function",

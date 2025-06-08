@@ -9,6 +9,7 @@ import (
 
 type Tool interface {
 	Definition() llms.Tool
+	SystemPrompt() string
 	Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error)
 }
 
@@ -87,12 +88,24 @@ func (r *registry) executeTool(ctx context.Context, messageHistory []llms.Messag
 	return messageHistory, nil
 }
 
-func (r *registry) Execute(ctx context.Context, inquiry string) (string, error) {
-	r.log(fmt.Sprintf("processing inquiry: %s", inquiry))
+func (r *registry) generatePrompts() []llms.MessageContent {
 	messageHistory := []llms.MessageContent{
 		llms.TextParts(llms.ChatMessageTypeSystem, "You are a helpful AI assistant. Whenever you use a tool and the tool returns a link (such as a calendar invite or external resource), you must always clearly include that link in your response to the user. If no link is returned, answer as usual."),
-		llms.TextParts(llms.ChatMessageTypeHuman, inquiry),
 	}
+
+	for _, tf := range r.toolFunctions {
+		if tf.SystemPrompt() != "" {
+			messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeSystem, tf.SystemPrompt()))
+		}
+	}
+
+	return messageHistory
+}
+
+func (r *registry) Execute(ctx context.Context, inquiry string) (string, error) {
+	r.log(fmt.Sprintf("processing inquiry: %s", inquiry))
+	messageHistory := r.generatePrompts()
+	messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, inquiry))
 
 	for {
 		resp, err := r.llm.GenerateContent(ctx, messageHistory, llms.WithTools(r.GetTools()))

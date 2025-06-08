@@ -19,6 +19,10 @@ func NewCreateEventTool(calendarService calendar.Service) *CreateEventTool {
 	}
 }
 
+func (t *CreateEventTool) SystemPrompt() string {
+	return ""
+}
+
 func (t *CreateEventTool) Definition() llms.Tool {
 	return llms.Tool{
 		Type: "function",
