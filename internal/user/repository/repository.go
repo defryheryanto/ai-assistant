@@ -35,3 +35,20 @@ func (r *Repository) FindUserByWhatsAppJID(ctx context.Context, jid string) (*us
 
 	return &res, nil
 }
+
+func (r *Repository) Insert(ctx context.Context, data *user.User) (int64, error) {
+	var id int64
+	_, err := r.db.ExecContext(
+		ctx,
+		queryInsert,
+		data.Name,
+		data.WhatsAppJID,
+		data.Role,
+		data.Email,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}

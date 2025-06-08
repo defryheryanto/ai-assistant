@@ -1,0 +1,139 @@
+package tools_test
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"testing"
+
+	"github.com/defryheryanto/ai-assistant/internal/user"
+	userMock "github.com/defryheryanto/ai-assistant/internal/user/mock"
+	"github.com/defryheryanto/ai-assistant/internal/user/tools"
+	"github.com/stretchr/testify/assert"
+	"github.com/tmc/langchaingo/llms"
+	"go.uber.org/mock/gomock"
+)
+
+func TestCreateUserTool_SystemPrompt(t *testing.T) {
+	tool := tools.NewCreateUserTool(nil)
+	expected := "When creating a new user, you must collect all required information such as name, phone, email, and role. For the role, only the following constant values are valid: 'user' and 'admin'. Do not allow any other values for the user’s role. If the user attempts to assign a different role, inform them that only user and admin are permitted."
+	assert.Equal(t, expected, tool.SystemPrompt())
+}
+
+func TestCreateUserTool_Definition(t *testing.T) {
+	tool := tools.NewCreateUserTool(nil)
+	def := tool.Definition()
+
+	assert.Equal(t, "function", def.Type)
+	assert.NotNil(t, def.Function)
+	if def.Function != nil {
+		assert.Equal(t, "CreateUser", def.Function.Name)
+		assert.Contains(t, def.Function.Description, "Create a new user")
+		// Check params
+		params, ok := def.Function.Parameters.(map[string]any)
+		assert.True(t, ok)
+		assert.Equal(t, "object", params["type"])
+
+		props, ok := params["properties"].(map[string]any)
+		assert.True(t, ok)
+		assert.Contains(t, props, "name")
+		assert.Contains(t, props, "phone")
+		assert.Contains(t, props, "role")
+		assert.Contains(t, props, "email")
+
+		// Optional: check required fields
+		req, ok := params["required"].([]string)
+		if !ok {
+			// Sometimes JSON -> interface{} -> []any
+			tmp, ok2 := params["required"].([]any)
+			assert.True(t, ok2)
+			assert.Len(t, tmp, 3)
+		} else {
+			assert.ElementsMatch(t, []string{"name", "phone", "email"}, req)
+		}
+	}
+}
+
+func TestCreateUserTool_Execute(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserService := userMock.NewMockService(ctrl)
+	tool := tools.NewCreateUserTool(mockUserService)
+	ctx := context.Background()
+
+	validArgs := map[string]any{
+		"name":  "Alice",
+		"phone": "08123456789",
+		"role":  "user",
+		"email": "alice@email.com",
+	}
+	argBytes, _ := json.Marshal(validArgs)
+
+	t.Run("success", func(t *testing.T) {
+		mockUserService.EXPECT().
+			Create(ctx, user.CreateUserParams{
+				Name:  "Alice",
+				Phone: "08123456789",
+				Role:  user.Role("user"),
+				Email: "alice@email.com",
+			}).
+			Return(int64(1), nil).
+			Times(1)
+
+		resp, err := tool.Execute(ctx, llms.ToolCall{
+			ID: "123",
+			FunctionCall: &llms.FunctionCall{
+				Name:      "CreateUser",
+				Arguments: string(argBytes),
+			},
+		})
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.Equal(t, llms.ChatMessageTypeTool, resp.Role)
+		found := false
+		for _, part := range resp.Parts {
+			if res, ok := part.(llms.ToolCallResponse); ok {
+				found = true
+				assert.Equal(t, "123", res.ToolCallID)
+				assert.Equal(t, "CreateUser", res.Name)
+				assert.Equal(t, "User successfully created", res.Content)
+			}
+		}
+		assert.True(t, found, "ToolCallResponse not found in response parts")
+	})
+
+	t.Run("invalid json", func(t *testing.T) {
+		resp, err := tool.Execute(ctx, llms.ToolCall{
+			ID: "456",
+			FunctionCall: &llms.FunctionCall{
+				Name:      "CreateUser",
+				Arguments: "{invalid-json}",
+			},
+		})
+		assert.Error(t, err)
+		assert.Nil(t, resp)
+	})
+
+	t.Run("userService error", func(t *testing.T) {
+		mockUserService.EXPECT().
+			Create(ctx, user.CreateUserParams{
+				Name:  "Alice",
+				Phone: "08123456789",
+				Role:  user.Role("user"),
+				Email: "alice@email.com",
+			}).
+			Return(int64(0), errors.New("create error")).
+			Times(1)
+
+		resp, err := tool.Execute(ctx, llms.ToolCall{
+			ID: "789",
+			FunctionCall: &llms.FunctionCall{
+				Name:      "CreateUser",
+				Arguments: string(argBytes),
+			},
+		})
+		assert.Error(t, err)
+		assert.Nil(t, resp)
+	})
+}

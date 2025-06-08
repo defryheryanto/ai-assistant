@@ -41,6 +41,21 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockService) Create(ctx context.Context, params user.CreateUserParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, params)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockServiceMockRecorder) Create(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockService)(nil).Create), ctx, params)
+}
+
 // GetUserByWhatsAppJID mocks base method.
 func (m *MockService) GetUserByWhatsAppJID(ctx context.Context, jid string) (*user.User, error) {
 	m.ctrl.T.Helper()
@@ -93,4 +108,19 @@ func (m *MockRepository) FindUserByWhatsAppJID(ctx context.Context, jid string) 
 func (mr *MockRepositoryMockRecorder) FindUserByWhatsAppJID(ctx, jid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByWhatsAppJID", reflect.TypeOf((*MockRepository)(nil).FindUserByWhatsAppJID), ctx, jid)
+}
+
+// Insert mocks base method.
+func (m *MockRepository) Insert(ctx context.Context, data *user.User) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Insert", ctx, data)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Insert indicates an expected call of Insert.
+func (mr *MockRepositoryMockRecorder) Insert(ctx, data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockRepository)(nil).Insert), ctx, data)
 }
