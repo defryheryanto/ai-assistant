@@ -10,12 +10,14 @@ import (
 )
 
 type CreateEventTool struct {
-	calendarService calendar.Service
+	calendarService   calendar.Service
+	isCreatorAttendee bool
 }
 
-func NewCreateEventTool(calendarService calendar.Service) *CreateEventTool {
+func NewCreateEventTool(calendarService calendar.Service, isCreatorAttendee bool) *CreateEventTool {
 	return &CreateEventTool{
-		calendarService: calendarService,
+		calendarService:   calendarService,
+		isCreatorAttendee: isCreatorAttendee,
 	}
 }
 
@@ -75,6 +77,7 @@ func (t *CreateEventTool) Execute(ctx context.Context, toolCall llms.ToolCall) (
 		return nil, err
 	}
 
+	args.IsCreatorAttendee = t.isCreatorAttendee
 	eventLink, err := t.calendarService.CreateEvent(ctx, args)
 	if err != nil {
 		return nil, err

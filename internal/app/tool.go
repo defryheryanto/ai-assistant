@@ -44,7 +44,7 @@ func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *
 }
 
 func registerTools(registry tools.Registry, srv *Services) {
-	registry.Register(calendartool.NewCreateEventTool(srv.CalendarService))
+	registry.Register(calendartool.NewCreateEventTool(srv.CalendarService, false))
 	registry.Register(timetool.NewCurrentTimeTool())
 	registry.Register(usertool.NewCreateUserTool(srv.UserService))
 }

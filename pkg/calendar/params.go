@@ -1,10 +1,11 @@
 package calendar
 
 type CreateEventParams struct {
-	Summary     string   `json:"summary"`
-	Description string   `json:"Description"`
-	Location    string   `json:"Location"`
-	Start       string   `json:"Start"`
-	End         string   `json:"End"`
-	Attendees   []string `json:"Attendees"`
+	Summary           string   `json:"summary"`
+	Description       string   `json:"Description"`
+	Location          string   `json:"Location"`
+	Start             string   `json:"Start"`
+	End               string   `json:"End"`
+	Attendees         []string `json:"Attendees"`
+	IsCreatorAttendee bool     `json:"is_creator_attendee"`
 }

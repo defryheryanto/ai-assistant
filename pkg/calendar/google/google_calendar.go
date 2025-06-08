@@ -65,9 +65,14 @@ func (s *GoogleCalendarService) getUserEmail() (string, error) {
 }
 
 func (s *GoogleCalendarService) CreateEvent(ctx context.Context, params calendar.CreateEventParams) (string, error) {
-	userEmail, err := s.getUserEmail()
-	if err != nil {
-		return "", err
+	attendees := []*gcalendar.EventAttendee{}
+	if params.IsCreatorAttendee {
+		userEmail, err := s.getUserEmail()
+		if err != nil {
+			return "", err
+		}
+
+		attendees = append(attendees, &gcalendar.EventAttendee{Email: userEmail})
 	}
 
 	event := &gcalendar.Event{
@@ -82,11 +87,7 @@ func (s *GoogleCalendarService) CreateEvent(ctx context.Context, params calendar
 			DateTime: params.End,
 			TimeZone: "Asia/Jakarta",
 		},
-		Attendees: []*gcalendar.EventAttendee{
-			{
-				Email: userEmail,
-			},
-		},
+		Attendees: attendees,
 	}
 
 	for _, email := range params.Attendees {
