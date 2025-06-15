@@ -31,7 +31,13 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to setup service: %v", err))
 	}
-	client.AddEventHandler(eventHandler(ctx, client, toolRegistry, services))
+
+	eventHandler := &EventHandler{
+		client:       client,
+		toolRegistry: toolRegistry,
+		services:     services,
+	}
+	client.AddEventHandler(eventHandler.Handle(ctx))
 
 	connectWhatsmeowClient(client)
 

@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS whatsapp_groups (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    group_jid TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT false,
+    registered_by TEXT NOT NULL
+);

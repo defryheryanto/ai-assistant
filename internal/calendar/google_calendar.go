@@ -3,6 +3,7 @@ package calendar
 import (
 	"context"
 
+	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/internal/user"
 	"github.com/defryheryanto/ai-assistant/pkg/calendar"
 )
@@ -20,7 +21,7 @@ func New(baseService calendar.Service, userService user.Service) *GoogleCalendar
 }
 
 func (s *GoogleCalendarService) CreateEvent(ctx context.Context, params calendar.CreateEventParams) (string, error) {
-	usr := user.GetUserFromContext(ctx)
+	usr := contextgroup.GetUserContext(ctx)
 	if usr == nil {
 		return s.baseService.CreateEvent(ctx, params)
 	}

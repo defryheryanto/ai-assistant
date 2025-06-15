@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/internal/user"
 	"github.com/tmc/langchaingo/llms"
 )
@@ -56,8 +57,8 @@ func (t *CreateUserTool) Definition() llms.Tool {
 
 func (t *CreateUserTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error) {
 	// TODO(defryheryanto): Move this to a middleware-like func
-	usr := user.GetUserFromContext(ctx)
-	if usr == nil || usr.Role != user.RoleAdmin {
+	usr := contextgroup.GetUserContext(ctx)
+	if usr == nil || usr.Role != string(user.RoleAdmin) {
 		return &llms.MessageContent{
 			Role: llms.ChatMessageTypeTool,
 			Parts: []llms.ContentPart{

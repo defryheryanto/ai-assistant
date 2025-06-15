@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/defryheryanto/ai-assistant/internal/calendar"
+	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/internal/user"
 	userMock "github.com/defryheryanto/ai-assistant/internal/user/mock"
 	pkgcalendar "github.com/defryheryanto/ai-assistant/pkg/calendar"
@@ -41,8 +42,8 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 	})
 
 	t.Run("User in context, GetUserByWhatsAppJID error", func(t *testing.T) {
-		usr := &user.User{WhatsAppJID: "jid1"}
-		ctxWithUser := user.SetUserToContext(ctx, usr)
+		usr := &contextgroup.UserContext{WhatsAppJID: "jid1"}
+		ctxWithUser := contextgroup.SetUserContext(ctx, usr)
 
 		mockUser.EXPECT().
 			GetUserByWhatsAppJID(ctxWithUser, usr.WhatsAppJID).
@@ -55,8 +56,8 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 	})
 
 	t.Run("User in context, not found in DB", func(t *testing.T) {
-		usr := &user.User{WhatsAppJID: "jid2"}
-		ctxWithUser := user.SetUserToContext(ctx, usr)
+		usr := &contextgroup.UserContext{WhatsAppJID: "jid1"}
+		ctxWithUser := contextgroup.SetUserContext(ctx, usr)
 
 		mockUser.EXPECT().
 			GetUserByWhatsAppJID(ctxWithUser, usr.WhatsAppJID).
@@ -73,8 +74,8 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 	})
 
 	t.Run("User in context, found in DB", func(t *testing.T) {
-		usr := &user.User{WhatsAppJID: "jid3"}
-		ctxWithUser := user.SetUserToContext(ctx, usr)
+		usr := &contextgroup.UserContext{WhatsAppJID: "jid1"}
+		ctxWithUser := contextgroup.SetUserContext(ctx, usr)
 		dbUser := &user.User{
 			Email: "test@email.com",
 		}

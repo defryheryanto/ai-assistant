@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	usertool "github.com/defryheryanto/ai-assistant/internal/user/tools"
+	whatsapptool "github.com/defryheryanto/ai-assistant/internal/whatsapp/tools"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	calendartool "github.com/defryheryanto/ai-assistant/pkg/tools/calendar"
 	timetool "github.com/defryheryanto/ai-assistant/pkg/tools/time"
@@ -47,4 +48,5 @@ func registerTools(registry tools.Registry, srv *Services) {
 	registry.Register(calendartool.NewCreateEventTool(srv.CalendarService, false))
 	registry.Register(timetool.NewCurrentTimeTool())
 	registry.Register(usertool.NewCreateUserTool(srv.UserService))
+	registry.Register(whatsapptool.NewRegisterGroupTool(srv.WhatsAppGroupService))
 }

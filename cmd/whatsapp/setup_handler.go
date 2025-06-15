@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
-	"strings"
+	"slices"
 
 	"github.com/defryheryanto/ai-assistant/config"
 	"github.com/defryheryanto/ai-assistant/internal/app"
-	"github.com/defryheryanto/ai-assistant/internal/user"
+	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	"github.com/openai/openai-go"
 	"go.mau.fi/whatsmeow"
@@ -17,27 +18,40 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func eventHandler(ctx context.Context, client *whatsmeow.Client, toolRegistry tools.Registry, services *app.Services) whatsmeow.EventHandler {
+var errSenderNotAuthenticated = fmt.Errorf("sender not authenticated")
+var errGroupNotAuthenticated = fmt.Errorf("group not authenticated")
+var errUserNotMentioned = fmt.Errorf("ignoring message, user not mentioned")
+
+type EventHandler struct {
+	client       *whatsmeow.Client
+	toolRegistry tools.Registry
+	services     *app.Services
+}
+
+func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 	return func(evt any) {
 		switch v := evt.(type) {
 		case *events.Message:
-			// Only respond to a personal message
-			chatJID := v.Info.MessageSource.Chat.String()
-			if !strings.HasSuffix(chatJID, "@s.whatsapp.net") {
-				return
-			}
-
-			if config.IsUserWhitelistEnabled {
-				usr, err := services.UserService.GetUserByWhatsAppJID(ctx, chatJID)
-				if err != nil {
-					log.Printf("error getting user: %v\n", err)
+			var err error
+			if !v.Info.IsGroup {
+				ctx, err = h.authenticateSender(ctx, v)
+				if err != nil && err != errSenderNotAuthenticated {
+					log.Printf("error authenticating sender: %v\n", err)
 					return
 				}
-				if usr == nil {
+				if err == errSenderNotAuthenticated && config.IsUserWhitelistEnabled {
+					return
+				}
+			} else {
+				ctx, err = h.authenticateGroup(ctx, v)
+				if err != nil && err != errSenderNotAuthenticated && err != errGroupNotAuthenticated && err != errUserNotMentioned {
+					log.Printf("error authenticating group: %v\n", err)
+					return
+				}
+				if err == errUserNotMentioned || err == errGroupNotAuthenticated {
 					return
 				}
 
-				ctx = user.SetUserToContext(ctx, usr)
 			}
 
 			textMessage := ""
@@ -48,7 +62,7 @@ func eventHandler(ctx context.Context, client *whatsmeow.Client, toolRegistry to
 				audioMessage := v.Message.GetAudioMessage()
 
 				f, _ := os.Create("./audio.wav")
-				err := client.DownloadToFile(ctx, audioMessage, f)
+				err := h.client.DownloadToFile(ctx, audioMessage, f)
 				if err != nil {
 					log.Printf("error downloading audio: %v\n", err)
 					return
@@ -62,7 +76,7 @@ func eventHandler(ctx context.Context, client *whatsmeow.Client, toolRegistry to
 				}
 				defer ff.Close()
 
-				res, err := services.OpenAIClient.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
+				res, err := h.services.OpenAIClient.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
 					Model: openai.AudioModelWhisper1,
 					File:  ff,
 				})
@@ -78,13 +92,13 @@ func eventHandler(ctx context.Context, client *whatsmeow.Client, toolRegistry to
 				return
 			}
 
-			resp, err := toolRegistry.Execute(ctx, textMessage)
+			resp, err := h.toolRegistry.Execute(ctx, textMessage)
 			if err != nil {
 				log.Printf("error executing tool: %v\n", err)
 				return
 			}
 
-			_, err = client.SendMessage(ctx, v.Info.Chat, &waE2E.Message{
+			_, err = h.client.SendMessage(ctx, v.Info.Chat, &waE2E.Message{
 				Conversation: proto.String(resp),
 			})
 			if err != nil {
@@ -103,4 +117,67 @@ func getMessage(evt *events.Message) string {
 		return evt.Message.GetExtendedTextMessage().GetText()
 	}
 	return ""
+}
+
+func (h *EventHandler) authenticateSender(ctx context.Context, evt *events.Message) (context.Context, error) {
+	senderJID := evt.Info.Sender.ToNonAD().String()
+	usr, err := h.services.UserService.GetUserByWhatsAppJID(ctx, senderJID)
+	if err != nil {
+		return ctx, err
+	}
+	if usr == nil {
+		return ctx, errSenderNotAuthenticated
+	}
+
+	ctx = contextgroup.SetUserContext(ctx, &contextgroup.UserContext{
+		ID:          usr.ID,
+		Name:        usr.Name,
+		WhatsAppJID: usr.WhatsAppJID,
+		Role:        string(usr.Role),
+		Email:       usr.Email,
+	})
+
+	return ctx, nil
+}
+
+func (h *EventHandler) authenticateGroup(ctx context.Context, evt *events.Message) (context.Context, error) {
+	if !evt.Info.IsGroup {
+		return ctx, nil
+	}
+
+	// Process only mentioned message in group
+	mentionedJIDs := evt.Message.GetExtendedTextMessage().GetContextInfo().GetMentionedJID()
+	currentLoggedInUserJID := h.client.Store.ID.ToNonAD().String()
+	if !slices.Contains(mentionedJIDs, currentLoggedInUserJID) {
+		return ctx, errUserNotMentioned
+	}
+
+	var err error
+	isSenderAuthenticated := true
+	ctx, err = h.authenticateSender(ctx, evt)
+	if err != nil && err != errSenderNotAuthenticated {
+		return ctx, err
+	}
+	if err == errSenderNotAuthenticated {
+		isSenderAuthenticated = false
+	}
+
+	chatJID := evt.Info.Chat.ToNonAD().String()
+	if config.IsWhatsAppGroupWhitelistEnabled || !isSenderAuthenticated {
+		whatsappGroup, err := h.services.WhatsAppGroupService.GetByJID(ctx, chatJID)
+		if err != nil {
+			return ctx, err
+		}
+		if whatsappGroup == nil {
+			return ctx, errGroupNotAuthenticated
+		}
+	}
+
+	senderJID := evt.Info.Sender.ToNonAD().String()
+	ctx = contextgroup.SetWhatsAppContext(ctx, &contextgroup.WhatsAppContext{
+		CurrentChatJID: chatJID,
+		SenderJID:      senderJID,
+	})
+
+	return h.authenticateSender(ctx, evt)
 }
