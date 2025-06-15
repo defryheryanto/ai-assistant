@@ -6,6 +6,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/internal/user"
 	userMock "github.com/defryheryanto/ai-assistant/internal/user/mock"
 	"github.com/defryheryanto/ai-assistant/internal/user/tools"
@@ -60,7 +61,6 @@ func TestCreateUserTool_Execute(t *testing.T) {
 
 	mockUserService := userMock.NewMockService(ctrl)
 	tool := tools.NewCreateUserTool(mockUserService)
-	ctx := context.Background()
 
 	validArgs := map[string]any{
 		"name":  "Alice",
@@ -70,9 +70,57 @@ func TestCreateUserTool_Execute(t *testing.T) {
 	}
 	argBytes, _ := json.Marshal(validArgs)
 
-	t.Run("success", func(t *testing.T) {
+	adminCtx := contextgroup.SetUserContext(context.Background(), &contextgroup.UserContext{
+		ID:   1,
+		Role: string(user.RoleAdmin),
+	})
+	nonAdminCtx := contextgroup.SetUserContext(context.Background(), &contextgroup.UserContext{
+		ID:   2,
+		Role: string(user.RoleUser),
+	})
+	nilUserCtx := context.Background()
+
+	t.Run("permission denied - non-admin", func(t *testing.T) {
+		resp, err := tool.Execute(nonAdminCtx, llms.ToolCall{
+			ID: "noadmin",
+			FunctionCall: &llms.FunctionCall{
+				Name:      "CreateUser",
+				Arguments: string(argBytes),
+			},
+		})
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.Equal(t, llms.ChatMessageTypeTool, resp.Role)
+		if assert.Len(t, resp.Parts, 1) {
+			res, ok := resp.Parts[0].(llms.ToolCallResponse)
+			assert.True(t, ok)
+			assert.Equal(t, "noadmin", res.ToolCallID)
+			assert.Contains(t, res.Content, "did not have permission")
+		}
+	})
+
+	t.Run("permission denied - nil user", func(t *testing.T) {
+		resp, err := tool.Execute(nilUserCtx, llms.ToolCall{
+			ID: "niluser",
+			FunctionCall: &llms.FunctionCall{
+				Name:      "CreateUser",
+				Arguments: string(argBytes),
+			},
+		})
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.Equal(t, llms.ChatMessageTypeTool, resp.Role)
+		if assert.Len(t, resp.Parts, 1) {
+			res, ok := resp.Parts[0].(llms.ToolCallResponse)
+			assert.True(t, ok)
+			assert.Equal(t, "niluser", res.ToolCallID)
+			assert.Contains(t, res.Content, "did not have permission")
+		}
+	})
+
+	t.Run("success - admin context", func(t *testing.T) {
 		mockUserService.EXPECT().
-			Create(ctx, user.CreateUserParams{
+			Create(adminCtx, user.CreateUserParams{
 				Name:  "Alice",
 				Phone: "08123456789",
 				Role:  user.Role("user"),
@@ -81,7 +129,7 @@ func TestCreateUserTool_Execute(t *testing.T) {
 			Return(int64(1), nil).
 			Times(1)
 
-		resp, err := tool.Execute(ctx, llms.ToolCall{
+		resp, err := tool.Execute(adminCtx, llms.ToolCall{
 			ID: "123",
 			FunctionCall: &llms.FunctionCall{
 				Name:      "CreateUser",
@@ -104,7 +152,7 @@ func TestCreateUserTool_Execute(t *testing.T) {
 	})
 
 	t.Run("invalid json", func(t *testing.T) {
-		resp, err := tool.Execute(ctx, llms.ToolCall{
+		resp, err := tool.Execute(adminCtx, llms.ToolCall{
 			ID: "456",
 			FunctionCall: &llms.FunctionCall{
 				Name:      "CreateUser",
@@ -117,7 +165,7 @@ func TestCreateUserTool_Execute(t *testing.T) {
 
 	t.Run("userService error", func(t *testing.T) {
 		mockUserService.EXPECT().
-			Create(ctx, user.CreateUserParams{
+			Create(adminCtx, user.CreateUserParams{
 				Name:  "Alice",
 				Phone: "08123456789",
 				Role:  user.Role("user"),
@@ -126,7 +174,7 @@ func TestCreateUserTool_Execute(t *testing.T) {
 			Return(int64(0), errors.New("create error")).
 			Times(1)
 
-		resp, err := tool.Execute(ctx, llms.ToolCall{
+		resp, err := tool.Execute(adminCtx, llms.ToolCall{
 			ID: "789",
 			FunctionCall: &llms.FunctionCall{
 				Name:      "CreateUser",
