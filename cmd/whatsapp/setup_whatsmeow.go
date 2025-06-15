@@ -11,7 +11,9 @@ import (
 	"github.com/defryheryanto/ai-assistant/config"
 	_ "github.com/mattn/go-sqlite3"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
+	"google.golang.org/protobuf/proto"
 )
 
 func setupWhatsmeowClient(ctx context.Context) (*whatsmeow.Client, error) {
@@ -28,6 +30,7 @@ func setupWhatsmeowClient(ctx context.Context) (*whatsmeow.Client, error) {
 }
 
 func connectWhatsmeowClient(client *whatsmeow.Client) {
+	store.DeviceProps.Os = proto.String(config.AppName)
 	if client.Store.ID == nil {
 		qrChan, _ := client.GetQRChannel(context.Background())
 		err := client.Connect()
