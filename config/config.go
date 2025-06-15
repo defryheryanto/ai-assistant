@@ -1,7 +1,9 @@
 package config
 
 var (
-	AppName                         string
+	AppName        string
+	TempFolderPath string
+
 	DatabaseConnectionString        string
 	IsUserWhitelistEnabled          bool
 	IsWhatsAppGroupWhitelistEnabled bool
@@ -17,6 +19,8 @@ var (
 
 func Init() {
 	AppName = getString("APP_NAME", "ai-assistant")
+	TempFolderPath = getString("TEMP_FOLDER_PATH", "")
+
 	DatabaseConnectionString = getString("DATABASE_CONNECTION_STRING", "")
 	IsUserWhitelistEnabled = getBool("IS_USER_WHITELIST_ENABLED", false)
 	IsWhatsAppGroupWhitelistEnabled = getBool("IS_WHATSAPP_GROUP_WHITELIST_ENABLED", false)

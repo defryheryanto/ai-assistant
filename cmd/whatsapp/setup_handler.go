@@ -11,6 +11,7 @@ import (
 	"github.com/defryheryanto/ai-assistant/internal/app"
 	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
+	"github.com/google/uuid"
 	"github.com/openai/openai-go"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -61,15 +62,17 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 			case v.Message.GetAudioMessage() != nil:
 				audioMessage := v.Message.GetAudioMessage()
 
-				f, _ := os.Create("./audio.wav")
+				audioFileName := fmt.Sprintf("%s/transcriptions/%s.wav", config.TempFolderPath, uuid.New().String())
+				f, _ := os.Create(audioFileName)
 				err := h.client.DownloadToFile(ctx, audioMessage, f)
 				if err != nil {
 					log.Printf("error downloading audio: %v\n", err)
 					return
 				}
 				f.Close()
+				defer os.Remove(audioFileName)
 
-				ff, err := os.Open("./audio.wav")
+				ff, err := os.Open(audioFileName)
 				if err != nil {
 					log.Printf("error opening audio: %v\n", err)
 					return
