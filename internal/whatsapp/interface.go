@@ -2,6 +2,8 @@ package whatsapp
 
 import "context"
 
+//go:generate mockgen -source interface.go -package mock -destination mock/mock.go
+
 type GroupRepository interface {
 	FindByJID(ctx context.Context, jid string) (*Group, error)
 	Insert(ctx context.Context, data *Group) (int64, error)
