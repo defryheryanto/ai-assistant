@@ -11,6 +11,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type tokenSavingSource struct {
+	oauth2.TokenSource
+	filePath string
+}
+
+func (s *tokenSavingSource) Token() (*oauth2.Token, error) {
+	tok, err := s.TokenSource.Token()
+	if err == nil {
+		saveToken(s.filePath, tok)
+	}
+	return tok, err
+}
+
 func getClient(config *oauth2.Config, tokenFilePath string) (*http.Client, error) {
 	tok, err := tokenFromFile(tokenFilePath)
 	if err != nil {
@@ -22,7 +35,13 @@ func getClient(config *oauth2.Config, tokenFilePath string) (*http.Client, error
 		saveToken(tokenFilePath, tok)
 	}
 
-	return config.Client(context.Background(), tok), nil
+	tokenSource := config.TokenSource(context.Background(), tok)
+	tokenSource = &tokenSavingSource{
+		TokenSource: tokenSource,
+		filePath:    tokenFilePath,
+	}
+
+	return oauth2.NewClient(context.Background(), tokenSource), nil
 }
 
 func tokenFromFile(file string) (*oauth2.Token, error) {
