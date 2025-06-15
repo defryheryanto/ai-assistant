@@ -13,3 +13,13 @@ type GroupService interface {
 	GetByJID(ctx context.Context, jid string) (*Group, error)
 	Create(ctx context.Context, params CreateGroupParams) (int64, error)
 }
+
+type UserRepository interface {
+	FindByJID(ctx context.Context, jid string) (*User, error)
+	Insert(ctx context.Context, data *User) (int64, error)
+}
+
+type UserService interface {
+	GetByJID(ctx context.Context, jid string) (*User, error)
+	Create(ctx context.Context, params CreateUserParams) (int64, error)
+}

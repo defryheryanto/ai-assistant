@@ -19,7 +19,7 @@ func NewGroupRepository(db *sql.DB) *GroupRepository {
 
 func (r *GroupRepository) FindByJID(ctx context.Context, jid string) (*whatsapp.Group, error) {
 	var res whatsapp.Group
-	err := r.db.QueryRowContext(ctx, queryFindByJID, jid).Scan(
+	err := r.db.QueryRowContext(ctx, queryFindGroupByJID, jid).Scan(
 		&res.ID,
 		&res.CreatedAt,
 		&res.UpdatedAt,
@@ -41,7 +41,7 @@ func (r *GroupRepository) Insert(ctx context.Context, data *whatsapp.Group) (int
 	var id int64
 	_, err := r.db.ExecContext(
 		ctx,
-		queryInsert,
+		queryInsertGroup,
 		data.GroupJID,
 		data.IsActive,
 		data.RegisteredBy,

@@ -121,7 +121,7 @@ func getMessage(evt *events.Message) string {
 
 func (h *EventHandler) authenticateSender(ctx context.Context, evt *events.Message) (context.Context, error) {
 	senderJID := evt.Info.Sender.ToNonAD().String()
-	usr, err := h.services.UserService.GetUserByWhatsAppJID(ctx, senderJID)
+	usr, err := h.services.UserService.GetByJID(ctx, senderJID)
 	if err != nil {
 		return ctx, err
 	}

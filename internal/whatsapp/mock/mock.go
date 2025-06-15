@@ -124,3 +124,111 @@ func (mr *MockGroupServiceMockRecorder) GetByJID(ctx, jid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByJID", reflect.TypeOf((*MockGroupService)(nil).GetByJID), ctx, jid)
 }
+
+// MockUserRepository is a mock of UserRepository interface.
+type MockUserRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockUserRepositoryMockRecorder
+	isgomock struct{}
+}
+
+// MockUserRepositoryMockRecorder is the mock recorder for MockUserRepository.
+type MockUserRepositoryMockRecorder struct {
+	mock *MockUserRepository
+}
+
+// NewMockUserRepository creates a new mock instance.
+func NewMockUserRepository(ctrl *gomock.Controller) *MockUserRepository {
+	mock := &MockUserRepository{ctrl: ctrl}
+	mock.recorder = &MockUserRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
+	return m.recorder
+}
+
+// FindByJID mocks base method.
+func (m *MockUserRepository) FindByJID(ctx context.Context, jid string) (*whatsapp.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByJID", ctx, jid)
+	ret0, _ := ret[0].(*whatsapp.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByJID indicates an expected call of FindByJID.
+func (mr *MockUserRepositoryMockRecorder) FindByJID(ctx, jid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByJID", reflect.TypeOf((*MockUserRepository)(nil).FindByJID), ctx, jid)
+}
+
+// Insert mocks base method.
+func (m *MockUserRepository) Insert(ctx context.Context, data *whatsapp.User) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Insert", ctx, data)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Insert indicates an expected call of Insert.
+func (mr *MockUserRepositoryMockRecorder) Insert(ctx, data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockUserRepository)(nil).Insert), ctx, data)
+}
+
+// MockUserService is a mock of UserService interface.
+type MockUserService struct {
+	ctrl     *gomock.Controller
+	recorder *MockUserServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockUserServiceMockRecorder is the mock recorder for MockUserService.
+type MockUserServiceMockRecorder struct {
+	mock *MockUserService
+}
+
+// NewMockUserService creates a new mock instance.
+func NewMockUserService(ctrl *gomock.Controller) *MockUserService {
+	mock := &MockUserService{ctrl: ctrl}
+	mock.recorder = &MockUserServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method.
+func (m *MockUserService) Create(ctx context.Context, params whatsapp.CreateUserParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, params)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockUserServiceMockRecorder) Create(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserService)(nil).Create), ctx, params)
+}
+
+// GetByJID mocks base method.
+func (m *MockUserService) GetByJID(ctx context.Context, jid string) (*whatsapp.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByJID", ctx, jid)
+	ret0, _ := ret[0].(*whatsapp.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByJID indicates an expected call of GetByJID.
+func (mr *MockUserServiceMockRecorder) GetByJID(ctx, jid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByJID", reflect.TypeOf((*MockUserService)(nil).GetByJID), ctx, jid)
+}

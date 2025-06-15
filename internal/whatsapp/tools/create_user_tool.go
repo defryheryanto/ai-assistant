@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 
 	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
-	"github.com/defryheryanto/ai-assistant/internal/user"
+	"github.com/defryheryanto/ai-assistant/internal/whatsapp"
 	"github.com/tmc/langchaingo/llms"
 )
 
 type CreateUserTool struct {
-	userService user.Service
+	userService whatsapp.UserService
 }
 
-func NewCreateUserTool(userService user.Service) *CreateUserTool {
+func NewCreateUserTool(userService whatsapp.UserService) *CreateUserTool {
 	return &CreateUserTool{
 		userService: userService,
 	}
@@ -58,7 +58,7 @@ func (t *CreateUserTool) Definition() llms.Tool {
 func (t *CreateUserTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error) {
 	// TODO(defryheryanto): Move this to a middleware-like func
 	usr := contextgroup.GetUserContext(ctx)
-	if usr == nil || usr.Role != string(user.RoleAdmin) {
+	if usr == nil || usr.Role != string(whatsapp.UserRoleAdmin) {
 		return &llms.MessageContent{
 			Role: llms.ChatMessageTypeTool,
 			Parts: []llms.ContentPart{
@@ -81,10 +81,10 @@ func (t *CreateUserTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*
 		return nil, err
 	}
 
-	_, err := t.userService.Create(ctx, user.CreateUserParams{
+	_, err := t.userService.Create(ctx, whatsapp.CreateUserParams{
 		Name:  args.Name,
 		Phone: args.Phone,
-		Role:  user.Role(args.Role),
+		Role:  whatsapp.UserRole(args.Role),
 		Email: args.Email,
 	})
 	if err != nil {

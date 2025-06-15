@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
-	"github.com/defryheryanto/ai-assistant/internal/user"
-	userMock "github.com/defryheryanto/ai-assistant/internal/user/mock"
-	"github.com/defryheryanto/ai-assistant/internal/user/tools"
+	"github.com/defryheryanto/ai-assistant/internal/whatsapp"
+	whatsappmock "github.com/defryheryanto/ai-assistant/internal/whatsapp/mock"
+	"github.com/defryheryanto/ai-assistant/internal/whatsapp/tools"
 	"github.com/stretchr/testify/assert"
 	"github.com/tmc/langchaingo/llms"
 	"go.uber.org/mock/gomock"
@@ -59,7 +59,7 @@ func TestCreateUserTool_Execute(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserService := userMock.NewMockService(ctrl)
+	mockUserService := whatsappmock.NewMockUserService(ctrl)
 	tool := tools.NewCreateUserTool(mockUserService)
 
 	validArgs := map[string]any{
@@ -72,11 +72,11 @@ func TestCreateUserTool_Execute(t *testing.T) {
 
 	adminCtx := contextgroup.SetUserContext(context.Background(), &contextgroup.UserContext{
 		ID:   1,
-		Role: string(user.RoleAdmin),
+		Role: string(whatsapp.UserRoleAdmin),
 	})
 	nonAdminCtx := contextgroup.SetUserContext(context.Background(), &contextgroup.UserContext{
 		ID:   2,
-		Role: string(user.RoleUser),
+		Role: string(whatsapp.UserRoleUser),
 	})
 	nilUserCtx := context.Background()
 
@@ -120,10 +120,10 @@ func TestCreateUserTool_Execute(t *testing.T) {
 
 	t.Run("success - admin context", func(t *testing.T) {
 		mockUserService.EXPECT().
-			Create(adminCtx, user.CreateUserParams{
+			Create(adminCtx, whatsapp.CreateUserParams{
 				Name:  "Alice",
 				Phone: "08123456789",
-				Role:  user.Role("user"),
+				Role:  whatsapp.UserRole("user"),
 				Email: "alice@email.com",
 			}).
 			Return(int64(1), nil).
@@ -165,10 +165,10 @@ func TestCreateUserTool_Execute(t *testing.T) {
 
 	t.Run("userService error", func(t *testing.T) {
 		mockUserService.EXPECT().
-			Create(adminCtx, user.CreateUserParams{
+			Create(adminCtx, whatsapp.CreateUserParams{
 				Name:  "Alice",
 				Phone: "08123456789",
-				Role:  user.Role("user"),
+				Role:  whatsapp.UserRole("user"),
 				Email: "alice@email.com",
 			}).
 			Return(int64(0), errors.New("create error")).

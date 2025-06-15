@@ -7,8 +7,8 @@ import (
 
 	"github.com/defryheryanto/ai-assistant/internal/calendar"
 	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
-	"github.com/defryheryanto/ai-assistant/internal/user"
-	userMock "github.com/defryheryanto/ai-assistant/internal/user/mock"
+	"github.com/defryheryanto/ai-assistant/internal/whatsapp"
+	whatsappmock "github.com/defryheryanto/ai-assistant/internal/whatsapp/mock"
 	pkgcalendar "github.com/defryheryanto/ai-assistant/pkg/calendar"
 	calMock "github.com/defryheryanto/ai-assistant/pkg/calendar/mock"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCal := calMock.NewMockService(ctrl)
-	mockUser := userMock.NewMockService(ctrl)
+	mockUser := whatsappmock.NewMockUserService(ctrl)
 
 	svc := calendar.New(mockCal, mockUser)
 
@@ -46,7 +46,7 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 		ctxWithUser := contextgroup.SetUserContext(ctx, usr)
 
 		mockUser.EXPECT().
-			GetUserByWhatsAppJID(ctxWithUser, usr.WhatsAppJID).
+			GetByJID(ctxWithUser, usr.WhatsAppJID).
 			Return(nil, errors.New("user error")).
 			Times(1)
 
@@ -60,7 +60,7 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 		ctxWithUser := contextgroup.SetUserContext(ctx, usr)
 
 		mockUser.EXPECT().
-			GetUserByWhatsAppJID(ctxWithUser, usr.WhatsAppJID).
+			GetByJID(ctxWithUser, usr.WhatsAppJID).
 			Return(nil, nil).
 			Times(1)
 		mockCal.EXPECT().
@@ -76,7 +76,7 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 	t.Run("User in context, found in DB", func(t *testing.T) {
 		usr := &contextgroup.UserContext{WhatsAppJID: "jid1"}
 		ctxWithUser := contextgroup.SetUserContext(ctx, usr)
-		dbUser := &user.User{
+		dbUser := &whatsapp.User{
 			Email: "test@email.com",
 		}
 
@@ -85,7 +85,7 @@ func TestGoogleCalendarService_CreateEvent(t *testing.T) {
 		expectedParams.Attendees = append(expectedParams.Attendees, dbUser.Email)
 
 		mockUser.EXPECT().
-			GetUserByWhatsAppJID(ctxWithUser, usr.WhatsAppJID).
+			GetByJID(ctxWithUser, usr.WhatsAppJID).
 			Return(dbUser, nil).
 			Times(1)
 		mockCal.EXPECT().

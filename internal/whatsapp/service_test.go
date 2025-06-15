@@ -1,46 +1,46 @@
-package user_test
+package whatsapp_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/defryheryanto/ai-assistant/internal/user"
-	"github.com/defryheryanto/ai-assistant/internal/user/mock"
+	"github.com/defryheryanto/ai-assistant/internal/whatsapp"
+	"github.com/defryheryanto/ai-assistant/internal/whatsapp/mock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
 
-func TestService_GetUserByWhatsAppJID(t *testing.T) {
+func TestService_GetByJID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mock.NewMockRepository(ctrl)
-	svc := user.NewService(mockRepo)
+	mockRepo := mock.NewMockUserRepository(ctrl)
+	svc := whatsapp.NewUserService(mockRepo)
 
 	ctx := context.Background()
 	jid := "123@whatsapp.net"
-	expectedUser := &user.User{
+	expectedUser := &whatsapp.User{
 		ID:   1,
 		Name: "Alice",
 	}
 
 	t.Run("found", func(t *testing.T) {
 		mockRepo.EXPECT().
-			FindUserByWhatsAppJID(ctx, jid).
+			FindByJID(ctx, jid).
 			Return(expectedUser, nil).Times(1)
 
-		result, err := svc.GetUserByWhatsAppJID(ctx, jid)
+		result, err := svc.GetByJID(ctx, jid)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedUser, result)
 	})
 
 	t.Run("not found", func(t *testing.T) {
 		mockRepo.EXPECT().
-			FindUserByWhatsAppJID(ctx, jid).
+			FindByJID(ctx, jid).
 			Return(nil, nil).Times(1)
 
-		result, err := svc.GetUserByWhatsAppJID(ctx, jid)
+		result, err := svc.GetByJID(ctx, jid)
 		assert.NoError(t, err)
 		assert.Nil(t, result)
 	})
@@ -48,10 +48,10 @@ func TestService_GetUserByWhatsAppJID(t *testing.T) {
 	t.Run("repo error", func(t *testing.T) {
 		repoErr := errors.New("db error")
 		mockRepo.EXPECT().
-			FindUserByWhatsAppJID(ctx, jid).
+			FindByJID(ctx, jid).
 			Return(nil, repoErr).Times(1)
 
-		result, err := svc.GetUserByWhatsAppJID(ctx, jid)
+		result, err := svc.GetByJID(ctx, jid)
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Equal(t, repoErr, err)
@@ -62,12 +62,12 @@ func TestService_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mock.NewMockRepository(ctrl)
-	svc := user.NewService(mockRepo)
+	mockRepo := mock.NewMockUserRepository(ctrl)
+	svc := whatsapp.NewUserService(mockRepo)
 	ctx := context.Background()
 
 	// base params
-	baseParams := user.CreateUserParams{
+	baseParams := whatsapp.CreateUserParams{
 		Name:  "Alice",
 		Phone: "12345678",
 		Email: "alice@email.com",
@@ -76,10 +76,10 @@ func TestService_Create(t *testing.T) {
 	t.Run("role is empty, should default to RoleUser", func(t *testing.T) {
 		params := baseParams
 		params.Role = ""
-		expectedUser := &user.User{
+		expectedUser := &whatsapp.User{
 			Name:        params.Name,
 			WhatsAppJID: params.Phone + "@s.whatsapp.net",
-			Role:        user.RoleUser,
+			Role:        whatsapp.UserRoleUser,
 			Email:       params.Email,
 		}
 		mockRepo.EXPECT().
@@ -94,11 +94,11 @@ func TestService_Create(t *testing.T) {
 
 	t.Run("role is RoleUser", func(t *testing.T) {
 		params := baseParams
-		params.Role = user.RoleUser
-		expectedUser := &user.User{
+		params.Role = whatsapp.UserRoleUser
+		expectedUser := &whatsapp.User{
 			Name:        params.Name,
 			WhatsAppJID: params.Phone + "@s.whatsapp.net",
-			Role:        user.RoleUser,
+			Role:        whatsapp.UserRoleUser,
 			Email:       params.Email,
 		}
 		mockRepo.EXPECT().
@@ -113,11 +113,11 @@ func TestService_Create(t *testing.T) {
 
 	t.Run("role is RoleAdmin", func(t *testing.T) {
 		params := baseParams
-		params.Role = user.RoleAdmin
-		expectedUser := &user.User{
+		params.Role = whatsapp.UserRoleAdmin
+		expectedUser := &whatsapp.User{
 			Name:        params.Name,
 			WhatsAppJID: params.Phone + "@s.whatsapp.net",
-			Role:        user.RoleAdmin,
+			Role:        whatsapp.UserRoleAdmin,
 			Email:       params.Email,
 		}
 		mockRepo.EXPECT().
@@ -133,10 +133,10 @@ func TestService_Create(t *testing.T) {
 	t.Run("invalid role, should default to RoleUser", func(t *testing.T) {
 		params := baseParams
 		params.Role = "invalid"
-		expectedUser := &user.User{
+		expectedUser := &whatsapp.User{
 			Name:        params.Name,
 			WhatsAppJID: params.Phone + "@s.whatsapp.net",
-			Role:        user.RoleUser,
+			Role:        whatsapp.UserRoleUser,
 			Email:       params.Email,
 		}
 		mockRepo.EXPECT().
@@ -151,11 +151,11 @@ func TestService_Create(t *testing.T) {
 
 	t.Run("repo error", func(t *testing.T) {
 		params := baseParams
-		params.Role = user.RoleUser
-		expectedUser := &user.User{
+		params.Role = whatsapp.UserRoleUser
+		expectedUser := &whatsapp.User{
 			Name:        params.Name,
 			WhatsAppJID: params.Phone + "@s.whatsapp.net",
-			Role:        user.RoleUser,
+			Role:        whatsapp.UserRoleUser,
 			Email:       params.Email,
 		}
 		mockRepo.EXPECT().

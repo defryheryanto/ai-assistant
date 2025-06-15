@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	usertool "github.com/defryheryanto/ai-assistant/internal/user/tools"
 	whatsapptool "github.com/defryheryanto/ai-assistant/internal/whatsapp/tools"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	calendartool "github.com/defryheryanto/ai-assistant/pkg/tools/calendar"
@@ -47,6 +46,6 @@ func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *
 func registerTools(registry tools.Registry, srv *Services) {
 	registry.Register(calendartool.NewCreateEventTool(srv.CalendarService, false))
 	registry.Register(timetool.NewCurrentTimeTool())
-	registry.Register(usertool.NewCreateUserTool(srv.UserService))
+	registry.Register(whatsapptool.NewCreateUserTool(srv.UserService))
 	registry.Register(whatsapptool.NewRegisterGroupTool(srv.WhatsAppGroupService))
 }

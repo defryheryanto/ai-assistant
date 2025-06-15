@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/defryheryanto/ai-assistant/internal/calendar"
-	"github.com/defryheryanto/ai-assistant/internal/user"
 	"github.com/defryheryanto/ai-assistant/internal/whatsapp"
 	pkgcalendar "github.com/defryheryanto/ai-assistant/pkg/calendar"
 	googlecalendar "github.com/defryheryanto/ai-assistant/pkg/calendar/google"
@@ -13,7 +12,7 @@ import (
 )
 
 type Services struct {
-	UserService          user.Service
+	UserService          whatsapp.UserService
 	WhatsAppGroupService whatsapp.GroupService
 	CalendarService      pkgcalendar.Service
 	OpenAIClient         openai.Client
@@ -22,7 +21,7 @@ type Services struct {
 func SetupServices(ctx context.Context, params SetupToolsParams) (*Services, error) {
 	repositories := SetupRepository(ctx, params.DB)
 
-	userService := user.NewService(repositories.UserRepository)
+	userService := whatsapp.NewUserService(repositories.UserRepository)
 
 	whatsappGroupService := whatsapp.NewGroupService(repositories.WhatsAppGroupRepository)
 
