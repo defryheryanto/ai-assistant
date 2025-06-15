@@ -7,6 +7,8 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
+//go:generate mockgen -source registry.go -package mock -destination mock/mock.go
+
 type Tool interface {
 	Definition() llms.Tool
 	SystemPrompt() string

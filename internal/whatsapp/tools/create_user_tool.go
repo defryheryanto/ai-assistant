@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/internal/whatsapp"
 	"github.com/tmc/langchaingo/llms"
 )
@@ -56,21 +55,6 @@ func (t *CreateUserTool) Definition() llms.Tool {
 }
 
 func (t *CreateUserTool) Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error) {
-	// TODO(defryheryanto): Move this to a middleware-like func
-	usr := contextgroup.GetUserContext(ctx)
-	if usr == nil || usr.Role != string(whatsapp.UserRoleAdmin) {
-		return &llms.MessageContent{
-			Role: llms.ChatMessageTypeTool,
-			Parts: []llms.ContentPart{
-				llms.ToolCallResponse{
-					ToolCallID: toolCall.ID,
-					Name:       toolCall.FunctionCall.Name,
-					Content:    "The requestor did not have permission to create user",
-				},
-			},
-		}, nil
-	}
-
 	var args struct {
 		Name  string `json:"name"`
 		Phone string `json:"phone"`

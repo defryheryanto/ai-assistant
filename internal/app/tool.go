@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/defryheryanto/ai-assistant/config"
+	"github.com/defryheryanto/ai-assistant/internal/whatsapp"
 	whatsapptool "github.com/defryheryanto/ai-assistant/internal/whatsapp/tools"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	calendartool "github.com/defryheryanto/ai-assistant/pkg/tools/calendar"
@@ -51,6 +52,8 @@ func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *
 func registerTools(registry tools.Registry, srv *Services) {
 	registry.Register(calendartool.NewCreateEventTool(srv.CalendarService, false))
 	registry.Register(timetool.NewCurrentTimeTool())
-	registry.Register(whatsapptool.NewCreateUserTool(srv.UserService))
-	registry.Register(whatsapptool.NewRegisterGroupTool(srv.WhatsAppGroupService))
+
+	allowedAdminRole := []whatsapp.UserRole{whatsapp.UserRoleAdmin}
+	registry.Register(whatsapptool.NewRoleMiddlewareTool(whatsapptool.NewCreateUserTool(srv.UserService), allowedAdminRole))
+	registry.Register(whatsapptool.NewRoleMiddlewareTool(whatsapptool.NewRegisterGroupTool(srv.WhatsAppGroupService), allowedAdminRole))
 }
