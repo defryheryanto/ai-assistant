@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/defryheryanto/ai-assistant/config"
 	whatsapptool "github.com/defryheryanto/ai-assistant/internal/whatsapp/tools"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	calendartool "github.com/defryheryanto/ai-assistant/pkg/tools/calendar"
@@ -37,7 +38,11 @@ func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *
 		return nil, nil, err
 	}
 
-	toolRegistry := tools.NewRegistry(llm, true)
+	toolRegistry := tools.NewRegistry(
+		llm,
+		tools.WithLoggerOption(),
+		tools.WithSystemPromptOption(config.AssistantSystemPrompt),
+	)
 	registerTools(toolRegistry, srv)
 
 	return toolRegistry, srv, nil

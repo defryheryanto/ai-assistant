@@ -1,8 +1,9 @@
 package config
 
 var (
-	AppName        string
-	TempFolderPath string
+	AppName               string
+	TempFolderPath        string
+	AssistantSystemPrompt string
 
 	DatabaseConnectionString        string
 	IsUserWhitelistEnabled          bool
@@ -20,6 +21,7 @@ var (
 func Init() {
 	AppName = getString("APP_NAME", "ai-assistant")
 	TempFolderPath = getString("TEMP_FOLDER_PATH", "")
+	AssistantSystemPrompt = getString("ASSISTANT_SYSTEM_PROMPT", "")
 
 	DatabaseConnectionString = getString("DATABASE_CONNECTION_STRING", "")
 	IsUserWhitelistEnabled = getBool("IS_USER_WHITELIST_ENABLED", false)

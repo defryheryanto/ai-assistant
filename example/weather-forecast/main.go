@@ -23,7 +23,7 @@ func main() {
 		panic(fmt.Sprintf("failed to setup llm: %v", err))
 	}
 
-	toolRegistry := tools.NewRegistry(llm, true)
+	toolRegistry := tools.NewRegistry(llm, tools.WithLoggerOption())
 	toolRegistry.Register(NewForecastTool())
 
 	inquiry := "What is the weather like in Boston?"

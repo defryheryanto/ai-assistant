@@ -23,14 +23,22 @@ type registry struct {
 	llm           llms.Model
 	toolFunctions []Tool
 	enableLog     bool
+	systemPrompt  string
 }
 
-func NewRegistry(llm llms.Model, enableLog bool) *registry {
-	return &registry{
+func NewRegistry(llm llms.Model, options ...Option) *registry {
+	r := &registry{
 		llm:           llm,
 		toolFunctions: []Tool{},
-		enableLog:     enableLog,
+		enableLog:     false,
+		systemPrompt:  defaultSystemPrompt,
 	}
+
+	for _, opt := range options {
+		opt(r)
+	}
+
+	return r
 }
 
 func (r *registry) Register(tool Tool) {
@@ -90,7 +98,7 @@ func (r *registry) executeTool(ctx context.Context, messageHistory []llms.Messag
 
 func (r *registry) generatePrompts() []llms.MessageContent {
 	messageHistory := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, "You are a helpful AI assistant. Whenever you use a tool and the tool returns a link (such as a calendar invite or external resource), you must always clearly include that link in your response to the user. If no link is returned, answer as usual."),
+		llms.TextParts(llms.ChatMessageTypeSystem, r.systemPrompt),
 	}
 
 	for _, tf := range r.toolFunctions {
