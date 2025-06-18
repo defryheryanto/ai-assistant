@@ -39,13 +39,13 @@ func (r *GroupRepository) FindByJID(ctx context.Context, jid string) (*whatsapp.
 
 func (r *GroupRepository) Insert(ctx context.Context, data *whatsapp.Group) (int64, error) {
 	var id int64
-	_, err := r.db.ExecContext(
+	err := r.db.QueryRowContext(
 		ctx,
 		queryInsertGroup,
 		data.GroupJID,
 		data.IsActive,
 		data.RegisteredBy,
-	)
+	).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
