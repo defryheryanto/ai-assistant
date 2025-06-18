@@ -38,14 +38,14 @@ func (r *UserRepository) FindByJID(ctx context.Context, jid string) (*whatsapp.U
 
 func (r *UserRepository) Insert(ctx context.Context, data *whatsapp.User) (int64, error) {
 	var id int64
-	_, err := r.db.ExecContext(
+	err := r.db.QueryRowContext(
 		ctx,
 		queryInsertUser,
 		data.Name,
 		data.WhatsAppJID,
 		data.Role,
 		data.Email,
-	)
+	).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
