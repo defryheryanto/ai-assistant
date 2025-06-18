@@ -22,7 +22,7 @@ func (t *CurrentTimeTool) Definition() llms.Tool {
 		Type: "function",
 		Function: &llms.FunctionDefinition{
 			Name:        "GetCurrentTime",
-			Description: "Get the current time for any time calculating",
+			Description: "Get the current time for any time calculations.",
 		},
 	}
 }
