@@ -27,7 +27,7 @@ func main() {
 	toolRegistry.Register(NewForecastTool())
 
 	inquiry := "What is the weather like in Boston?"
-	resp, err := toolRegistry.Execute(ctx, inquiry)
+	resp, err := toolRegistry.Execute(ctx, "default", inquiry)
 	if err != nil {
 		panic(err)
 	}

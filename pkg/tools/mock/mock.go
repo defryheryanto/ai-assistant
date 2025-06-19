@@ -110,18 +110,18 @@ func (m *MockRegistry) EXPECT() *MockRegistryMockRecorder {
 }
 
 // Execute mocks base method.
-func (m *MockRegistry) Execute(ctx context.Context, inquiry string) (string, error) {
+func (m *MockRegistry) Execute(ctx context.Context, contextID string, inquiry string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Execute", ctx, inquiry)
+	ret := m.ctrl.Call(m, "Execute", ctx, contextID, inquiry)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Execute indicates an expected call of Execute.
-func (mr *MockRegistryMockRecorder) Execute(ctx, inquiry any) *gomock.Call {
+func (mr *MockRegistryMockRecorder) Execute(ctx, contextID, inquiry any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockRegistry)(nil).Execute), ctx, inquiry)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockRegistry)(nil).Execute), ctx, contextID, inquiry)
 }
 
 // GetTools mocks base method.

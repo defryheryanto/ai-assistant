@@ -95,7 +95,7 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 				return
 			}
 
-			resp, err := h.toolRegistry.Execute(ctx, textMessage)
+			resp, err := h.toolRegistry.Execute(ctx, v.Info.Chat, textMessage)
 			if err != nil {
 				log.Printf("error executing tool: %v\n", err)
 				return

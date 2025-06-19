@@ -18,7 +18,7 @@ type Tool interface {
 type Registry interface {
 	Register(tool Tool)
 	GetTools() []llms.Tool
-	Execute(ctx context.Context, inquiry string) (string, error)
+	Execute(ctx context.Context, contextID string, inquiry string) (string, error)
 }
 
 type registry struct {
@@ -26,6 +26,7 @@ type registry struct {
 	toolFunctions []Tool
 	enableLog     bool
 	systemPrompt  string
+	contextWindow ContextWindow
 }
 
 func NewRegistry(llm llms.Model, options ...Option) *registry {
@@ -34,6 +35,7 @@ func NewRegistry(llm llms.Model, options ...Option) *registry {
 		toolFunctions: []Tool{},
 		enableLog:     false,
 		systemPrompt:  defaultSystemPrompt,
+		contextWindow: nil,
 	}
 
 	for _, opt := range options {
@@ -112,9 +114,20 @@ func (r *registry) generatePrompts() []llms.MessageContent {
 	return messageHistory
 }
 
-func (r *registry) Execute(ctx context.Context, inquiry string) (string, error) {
+func (r *registry) Execute(ctx context.Context, contextID string, inquiry string) (string, error) {
 	r.log(fmt.Sprintf("processing inquiry: %s", inquiry))
-	messageHistory := r.generatePrompts()
+	basePrompts := r.generatePrompts()
+	messageHistory := make([]llms.MessageContent, len(basePrompts))
+	copy(messageHistory, basePrompts)
+
+	if r.contextWindow != nil && contextID != "" {
+		history, err := r.contextWindow.GetHistory(ctx, contextID)
+		if err != nil {
+			return "", err
+		}
+		messageHistory = append(messageHistory, history...)
+	}
+
 	messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, inquiry))
 
 	for {
@@ -124,6 +137,11 @@ func (r *registry) Execute(ctx context.Context, inquiry string) (string, error) 
 		}
 		if len(resp.Choices[0].ToolCalls) == 0 {
 			r.log("inquiry process done")
+			messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeAI, resp.Choices[0].Content))
+			if r.contextWindow != nil && contextID != "" {
+				convHistory := messageHistory[len(basePrompts):]
+				_ = r.contextWindow.SaveHistory(ctx, contextID, convHistory)
+			}
 			return resp.Choices[0].Content, nil
 		}
 
