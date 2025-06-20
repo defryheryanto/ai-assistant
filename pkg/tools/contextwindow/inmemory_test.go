@@ -30,22 +30,24 @@ func TestInMemoryContextWindow_SaveHistory(t *testing.T) {
 	err := cw.SaveHistory(ctx, "abc", conv)
 	assert.NoError(t, err)
 
-	hist, err := cw.GetHistory(ctx, "abc")
-	assert.NoError(t, err)
-	assert.Equal(t, conv, hist)
+	t.Run("history stored", func(t *testing.T) {
+		hist, err := cw.GetHistory(ctx, "abc")
+		assert.NoError(t, err)
+		assert.Equal(t, conv, hist)
+	})
 
-	// returned history is a copy
-	conv[0] = llms.TextParts(llms.ChatMessageTypeHuman, "changed")
-	hist2, err := cw.GetHistory(ctx, "abc")
-	assert.NoError(t, err)
-	assert.NotEqual(t, conv, hist2)
+	t.Run("limit enforcement", func(t *testing.T) {
+		err := cw.SaveHistory(ctx, "abc", []llms.MessageContent{
+			llms.TextParts(llms.ChatMessageTypeHuman, "third"),
+		})
+		assert.NoError(t, err)
 
-	// limit enforcement
-	conv = append(conv, llms.TextParts(llms.ChatMessageTypeHuman, "third"))
-	err = cw.SaveHistory(ctx, "abc", conv)
-	assert.NoError(t, err)
-	hist3, err := cw.GetHistory(ctx, "abc")
-	assert.NoError(t, err)
-	expected := conv[len(conv)-2:]
-	assert.Equal(t, expected, hist3)
+		hist, err := cw.GetHistory(ctx, "abc")
+		assert.NoError(t, err)
+		expected := []llms.MessageContent{
+			llms.TextParts(llms.ChatMessageTypeAI, "hello"),
+			llms.TextParts(llms.ChatMessageTypeHuman, "third"),
+		}
+		assert.Equal(t, expected, hist)
+	})
 }

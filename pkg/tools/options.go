@@ -14,8 +14,8 @@ func WithSystemPromptOption(systemPrompt string) Option {
 	}
 }
 
-func WithContextWindow(cw ContextWindow) Option {
+func WithContextWindowManager(cw ContextWindowManager) Option {
 	return func(r *registry) {
-		r.contextWindow = cw
+		r.contextWindowManager = cw
 	}
 }

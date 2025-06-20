@@ -7,7 +7,7 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-// InMemoryContextWindow is a simple in-memory implementation of tools.ContextWindow.
+// InMemoryContextWindow is a simple in-memory implementation of tools.ContextWindowManager.
 type InMemoryContextWindow struct {
 	mu      sync.RWMutex
 	storage map[string][]llms.MessageContent
@@ -42,20 +42,25 @@ func (m *InMemoryContextWindow) GetHistory(ctx context.Context, id string) ([]ll
 	if !ok {
 		return []llms.MessageContent{}, nil
 	}
-	copyHist := make([]llms.MessageContent, len(history))
-	copy(copyHist, history)
-	return copyHist, nil
+	return history, nil
 }
 
 // SaveHistory saves the conversation history for the given id.
 func (m *InMemoryContextWindow) SaveHistory(ctx context.Context, id string, history []llms.MessageContent) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	copyHist := make([]llms.MessageContent, len(history))
-	copy(copyHist, history)
-	if m.limit > 0 && len(copyHist) > m.limit {
-		copyHist = copyHist[len(copyHist)-m.limit:]
+
+	if len(history) == 0 {
+		return nil
 	}
+
+	stored := append(m.storage[id], history...)
+	if m.limit > 0 && len(stored) > m.limit {
+		stored = stored[len(stored)-m.limit:]
+	}
+	// make a copy to prevent external modifications from affecting storage
+	copyHist := make([]llms.MessageContent, len(stored))
+	copy(copyHist, stored)
 	m.storage[id] = copyHist
 	return nil
 }

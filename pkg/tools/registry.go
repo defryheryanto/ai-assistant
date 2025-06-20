@@ -7,8 +7,8 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-// ContextWindow defines how conversational history is stored and retrieved.
-type ContextWindow interface {
+// ContextWindowManager defines how conversational history is stored and retrieved.
+type ContextWindowManager interface {
 	GetHistory(ctx context.Context, id string) ([]llms.MessageContent, error)
 	SaveHistory(ctx context.Context, id string, history []llms.MessageContent) error
 }
@@ -28,20 +28,20 @@ type Registry interface {
 }
 
 type registry struct {
-	llm           llms.Model
-	toolFunctions []Tool
-	enableLog     bool
-	systemPrompt  string
-	contextWindow ContextWindow
+	llm                  llms.Model
+	toolFunctions        []Tool
+	enableLog            bool
+	systemPrompt         string
+	contextWindowManager ContextWindowManager
 }
 
 func NewRegistry(llm llms.Model, options ...Option) *registry {
 	r := &registry{
-		llm:           llm,
-		toolFunctions: []Tool{},
-		enableLog:     false,
-		systemPrompt:  defaultSystemPrompt,
-		contextWindow: nil,
+		llm:                  llm,
+		toolFunctions:        []Tool{},
+		enableLog:            false,
+		systemPrompt:         defaultSystemPrompt,
+		contextWindowManager: nil,
 	}
 
 	for _, opt := range options {
@@ -126,8 +126,10 @@ func (r *registry) Execute(ctx context.Context, contextID string, inquiry string
 	messageHistory := make([]llms.MessageContent, len(basePrompts))
 	copy(messageHistory, basePrompts)
 
-	if r.contextWindow != nil && contextID != "" {
-		history, err := r.contextWindow.GetHistory(ctx, contextID)
+	var history []llms.MessageContent
+
+	if r.contextWindowManager != nil && contextID != "" {
+		history, err := r.contextWindowManager.GetHistory(ctx, contextID)
 		if err != nil {
 			return "", err
 		}
@@ -144,9 +146,9 @@ func (r *registry) Execute(ctx context.Context, contextID string, inquiry string
 		if len(resp.Choices[0].ToolCalls) == 0 {
 			r.log("inquiry process done")
 			messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeAI, resp.Choices[0].Content))
-			if r.contextWindow != nil && contextID != "" {
-				convHistory := messageHistory[len(basePrompts):]
-				_ = r.contextWindow.SaveHistory(ctx, contextID, convHistory)
+			if r.contextWindowManager != nil && contextID != "" {
+				convHistory := messageHistory[len(basePrompts)+len(history):]
+				_ = r.contextWindowManager.SaveHistory(ctx, contextID, convHistory)
 			}
 			return resp.Choices[0].Content, nil
 		}
