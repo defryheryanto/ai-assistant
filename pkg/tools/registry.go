@@ -7,13 +7,13 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-// ContextWindowManager defines how conversational history is stored and retrieved.
+//go:generate mockgen -source registry.go -package mock -destination mock/mock.go
+
+// ContextWindowManager is an interface to manage conversational history.
 type ContextWindowManager interface {
 	GetHistory(ctx context.Context, id string) ([]llms.MessageContent, error)
 	SaveHistory(ctx context.Context, id string, history []llms.MessageContent) error
 }
-
-//go:generate mockgen -source registry.go -package mock -destination mock/mock.go
 
 type Tool interface {
 	Definition() llms.Tool
