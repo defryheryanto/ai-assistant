@@ -9,6 +9,12 @@ import (
 
 //go:generate mockgen -source registry.go -package mock -destination mock/mock.go
 
+// ContextWindowManager is an interface to manage conversational history.
+type ContextWindowManager interface {
+	GetHistory(ctx context.Context, id string) ([]llms.MessageContent, error)
+	SaveHistory(ctx context.Context, id string, history []llms.MessageContent) error
+}
+
 type Tool interface {
 	Definition() llms.Tool
 	SystemPrompt() string
@@ -18,22 +24,24 @@ type Tool interface {
 type Registry interface {
 	Register(tool Tool)
 	GetTools() []llms.Tool
-	Execute(ctx context.Context, inquiry string) (string, error)
+	Execute(ctx context.Context, contextID string, inquiry string) (string, error)
 }
 
 type registry struct {
-	llm           llms.Model
-	toolFunctions []Tool
-	enableLog     bool
-	systemPrompt  string
+	llm                  llms.Model
+	toolFunctions        []Tool
+	enableLog            bool
+	systemPrompt         string
+	contextWindowManager ContextWindowManager
 }
 
 func NewRegistry(llm llms.Model, options ...Option) *registry {
 	r := &registry{
-		llm:           llm,
-		toolFunctions: []Tool{},
-		enableLog:     false,
-		systemPrompt:  defaultSystemPrompt,
+		llm:                  llm,
+		toolFunctions:        []Tool{},
+		enableLog:            false,
+		systemPrompt:         defaultSystemPrompt,
+		contextWindowManager: nil,
 	}
 
 	for _, opt := range options {
@@ -112,9 +120,22 @@ func (r *registry) generatePrompts() []llms.MessageContent {
 	return messageHistory
 }
 
-func (r *registry) Execute(ctx context.Context, inquiry string) (string, error) {
+func (r *registry) Execute(ctx context.Context, contextID string, inquiry string) (string, error) {
 	r.log(fmt.Sprintf("processing inquiry: %s", inquiry))
-	messageHistory := r.generatePrompts()
+	basePrompts := r.generatePrompts()
+	messageHistory := make([]llms.MessageContent, len(basePrompts))
+	copy(messageHistory, basePrompts)
+
+	var history []llms.MessageContent
+
+	if r.contextWindowManager != nil && contextID != "" {
+		history, err := r.contextWindowManager.GetHistory(ctx, contextID)
+		if err != nil {
+			return "", err
+		}
+		messageHistory = append(messageHistory, history...)
+	}
+
 	messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, inquiry))
 
 	for {
@@ -124,6 +145,11 @@ func (r *registry) Execute(ctx context.Context, inquiry string) (string, error) 
 		}
 		if len(resp.Choices[0].ToolCalls) == 0 {
 			r.log("inquiry process done")
+			messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeAI, resp.Choices[0].Content))
+			if r.contextWindowManager != nil && contextID != "" {
+				convHistory := messageHistory[len(basePrompts)+len(history):]
+				_ = r.contextWindowManager.SaveHistory(ctx, contextID, convHistory)
+			}
 			return resp.Choices[0].Content, nil
 		}
 

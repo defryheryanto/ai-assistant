@@ -18,6 +18,59 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
+// MockContextWindowManager is a mock of ContextWindowManager interface.
+type MockContextWindowManager struct {
+	ctrl     *gomock.Controller
+	recorder *MockContextWindowManagerMockRecorder
+	isgomock struct{}
+}
+
+// MockContextWindowManagerMockRecorder is the mock recorder for MockContextWindowManager.
+type MockContextWindowManagerMockRecorder struct {
+	mock *MockContextWindowManager
+}
+
+// NewMockContextWindowManager creates a new mock instance.
+func NewMockContextWindowManager(ctrl *gomock.Controller) *MockContextWindowManager {
+	mock := &MockContextWindowManager{ctrl: ctrl}
+	mock.recorder = &MockContextWindowManagerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockContextWindowManager) EXPECT() *MockContextWindowManagerMockRecorder {
+	return m.recorder
+}
+
+// GetHistory mocks base method.
+func (m *MockContextWindowManager) GetHistory(ctx context.Context, id string) ([]llms.MessageContent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHistory", ctx, id)
+	ret0, _ := ret[0].([]llms.MessageContent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHistory indicates an expected call of GetHistory.
+func (mr *MockContextWindowManagerMockRecorder) GetHistory(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistory", reflect.TypeOf((*MockContextWindowManager)(nil).GetHistory), ctx, id)
+}
+
+// SaveHistory mocks base method.
+func (m *MockContextWindowManager) SaveHistory(ctx context.Context, id string, history []llms.MessageContent) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveHistory", ctx, id, history)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveHistory indicates an expected call of SaveHistory.
+func (mr *MockContextWindowManagerMockRecorder) SaveHistory(ctx, id, history any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveHistory", reflect.TypeOf((*MockContextWindowManager)(nil).SaveHistory), ctx, id, history)
+}
+
 // MockTool is a mock of Tool interface.
 type MockTool struct {
 	ctrl     *gomock.Controller
@@ -110,18 +163,18 @@ func (m *MockRegistry) EXPECT() *MockRegistryMockRecorder {
 }
 
 // Execute mocks base method.
-func (m *MockRegistry) Execute(ctx context.Context, inquiry string) (string, error) {
+func (m *MockRegistry) Execute(ctx context.Context, contextID, inquiry string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Execute", ctx, inquiry)
+	ret := m.ctrl.Call(m, "Execute", ctx, contextID, inquiry)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Execute indicates an expected call of Execute.
-func (mr *MockRegistryMockRecorder) Execute(ctx, inquiry any) *gomock.Call {
+func (mr *MockRegistryMockRecorder) Execute(ctx, contextID, inquiry any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockRegistry)(nil).Execute), ctx, inquiry)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockRegistry)(nil).Execute), ctx, contextID, inquiry)
 }
 
 // GetTools mocks base method.
