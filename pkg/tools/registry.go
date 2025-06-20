@@ -15,12 +15,14 @@ type ContextWindowManager interface {
 	SaveHistory(ctx context.Context, id string, history []llms.MessageContent) error
 }
 
+// Tool defines a callable function that can be registered with the registry.
 type Tool interface {
 	Definition() llms.Tool
 	SystemPrompt() string
 	Execute(ctx context.Context, toolCall llms.ToolCall) (*llms.MessageContent, error)
 }
 
+// Registry provides access to registered tools and executes them when needed.
 type Registry interface {
 	Register(tool Tool)
 	GetTools() []llms.Tool
