@@ -11,11 +11,27 @@ import (
 type InMemoryContextWindow struct {
 	mu      sync.RWMutex
 	storage map[string][]llms.MessageContent
+	limit   int
+}
+
+type Option func(*InMemoryContextWindow)
+
+// WithLimit sets the maximum number of history messages retained for each context ID.
+func WithLimit(limit int) Option {
+	return func(m *InMemoryContextWindow) {
+		if limit > 0 {
+			m.limit = limit
+		}
+	}
 }
 
 // NewInMemoryContextWindow creates a new in-memory context window.
-func NewInMemoryContextWindow() *InMemoryContextWindow {
-	return &InMemoryContextWindow{storage: make(map[string][]llms.MessageContent)}
+func NewInMemoryContextWindow(opts ...Option) *InMemoryContextWindow {
+	cw := &InMemoryContextWindow{storage: make(map[string][]llms.MessageContent)}
+	for _, opt := range opts {
+		opt(cw)
+	}
+	return cw
 }
 
 // GetHistory returns the history associated with the given id.
@@ -37,6 +53,9 @@ func (m *InMemoryContextWindow) SaveHistory(ctx context.Context, id string, hist
 	defer m.mu.Unlock()
 	copyHist := make([]llms.MessageContent, len(history))
 	copy(copyHist, history)
+	if m.limit > 0 && len(copyHist) > m.limit {
+		copyHist = copyHist[len(copyHist)-m.limit:]
+	}
 	m.storage[id] = copyHist
 	return nil
 }

@@ -9,39 +9,43 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-func TestInMemoryContextWindow(t *testing.T) {
+func TestInMemoryContextWindow_GetHistory(t *testing.T) {
 	cw := contextwindow.NewInMemoryContextWindow()
 	ctx := context.Background()
 
-	t.Run("returns empty history for new id", func(t *testing.T) {
-		hist, err := cw.GetHistory(ctx, "abc")
-		assert.NoError(t, err)
-		assert.Empty(t, hist)
-	})
+	hist, err := cw.GetHistory(ctx, "abc")
+	assert.NoError(t, err)
+	assert.Empty(t, hist)
+}
+
+func TestInMemoryContextWindow_SaveHistory(t *testing.T) {
+	cw := contextwindow.NewInMemoryContextWindow(contextwindow.WithLimit(2))
+	ctx := context.Background()
 
 	conv := []llms.MessageContent{
 		llms.TextParts(llms.ChatMessageTypeHuman, "hi"),
 		llms.TextParts(llms.ChatMessageTypeAI, "hello"),
 	}
 
-	t.Run("saves and retrieves history", func(t *testing.T) {
-		err := cw.SaveHistory(ctx, "abc", conv)
-		assert.NoError(t, err)
+	err := cw.SaveHistory(ctx, "abc", conv)
+	assert.NoError(t, err)
 
-		hist, err := cw.GetHistory(ctx, "abc")
-		assert.NoError(t, err)
-		assert.Equal(t, conv, hist)
-	})
+	hist, err := cw.GetHistory(ctx, "abc")
+	assert.NoError(t, err)
+	assert.Equal(t, conv, hist)
 
-	t.Run("returned history is a copy", func(t *testing.T) {
-		conv[0] = llms.TextParts(llms.ChatMessageTypeHuman, "changed")
-		hist, err := cw.GetHistory(ctx, "abc")
-		assert.NoError(t, err)
-		assert.NotEqual(t, conv, hist)
-		expected := []llms.MessageContent{
-			llms.TextParts(llms.ChatMessageTypeHuman, "hi"),
-			llms.TextParts(llms.ChatMessageTypeAI, "hello"),
-		}
-		assert.Equal(t, expected, hist)
-	})
+	// returned history is a copy
+	conv[0] = llms.TextParts(llms.ChatMessageTypeHuman, "changed")
+	hist2, err := cw.GetHistory(ctx, "abc")
+	assert.NoError(t, err)
+	assert.NotEqual(t, conv, hist2)
+
+	// limit enforcement
+	conv = append(conv, llms.TextParts(llms.ChatMessageTypeHuman, "third"))
+	err = cw.SaveHistory(ctx, "abc", conv)
+	assert.NoError(t, err)
+	hist3, err := cw.GetHistory(ctx, "abc")
+	assert.NoError(t, err)
+	expected := conv[len(conv)-2:]
+	assert.Equal(t, expected, hist3)
 }
