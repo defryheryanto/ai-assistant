@@ -42,7 +42,9 @@ func (m *InMemoryContextWindow) GetHistory(ctx context.Context, id string) ([]ll
 	if !ok {
 		return []llms.MessageContent{}, nil
 	}
-	return history, nil
+	copyHist := make([]llms.MessageContent, len(history))
+	copy(copyHist, history)
+	return copyHist, nil
 }
 
 // SaveHistory saves the conversation history for the given id.

@@ -9,6 +9,7 @@ import (
 	whatsapptool "github.com/defryheryanto/ai-assistant/internal/whatsapp/tools"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	calendartool "github.com/defryheryanto/ai-assistant/pkg/tools/calendar"
+	"github.com/defryheryanto/ai-assistant/pkg/tools/contextwindow"
 	timetool "github.com/defryheryanto/ai-assistant/pkg/tools/time"
 	"github.com/tmc/langchaingo/llms/openai"
 )
@@ -39,10 +40,12 @@ func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *
 		return nil, nil, err
 	}
 
+	contextWindowManager := contextwindow.NewInMemoryContextWindow(contextwindow.WithLimit(15))
 	toolRegistry := tools.NewRegistry(
 		llm,
 		tools.WithLoggerOption(),
 		tools.WithSystemPromptOption(config.AssistantSystemPrompt),
+		tools.WithContextWindowManager(contextWindowManager),
 	)
 	registerTools(toolRegistry, srv)
 
