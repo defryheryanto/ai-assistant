@@ -1,4 +1,4 @@
-package tools
+package contextwindow
 
 import (
 	"context"
@@ -7,13 +7,7 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-// ContextWindow defines how conversational history is stored and retrieved.
-type ContextWindow interface {
-	GetHistory(ctx context.Context, id string) ([]llms.MessageContent, error)
-	SaveHistory(ctx context.Context, id string, history []llms.MessageContent) error
-}
-
-// InMemoryContextWindow is a simple in-memory implementation of ContextWindow.
+// InMemoryContextWindow is a simple in-memory implementation of tools.ContextWindow.
 type InMemoryContextWindow struct {
 	mu      sync.RWMutex
 	storage map[string][]llms.MessageContent
