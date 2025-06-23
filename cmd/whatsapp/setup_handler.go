@@ -35,7 +35,7 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 		case *events.Message:
 			var err error
 			if !v.Info.IsGroup {
-				ctx, err = h.authenticateSender(ctx, v)
+				ctx, err = h.authenticateSender(ctx, v, true)
 				if err != nil && err != errSenderNotAuthenticated {
 					log.Printf("error authenticating sender: %v\n", err)
 					return
@@ -95,9 +95,16 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 				return
 			}
 
+			respCtx := &contextgroup.ResponseContext{}
+			ctx = contextgroup.SetResponseContext(ctx, respCtx)
+
 			resp, err := h.toolRegistry.Execute(ctx, v.Info.Chat.ToNonAD().String(), textMessage)
 			if err != nil {
 				log.Printf("error executing tool: %v\n", err)
+				return
+			}
+
+			if respCtx.MediaSent {
 				return
 			}
 
@@ -122,7 +129,7 @@ func getMessage(evt *events.Message) string {
 	return ""
 }
 
-func (h *EventHandler) authenticateSender(ctx context.Context, evt *events.Message) (context.Context, error) {
+func (h *EventHandler) authenticateSender(ctx context.Context, evt *events.Message, setWhatsAppContext bool) (context.Context, error) {
 	senderJID := evt.Info.Sender.ToNonAD().String()
 	usr, err := h.services.UserService.GetByJID(ctx, senderJID)
 	if err != nil {
@@ -139,6 +146,13 @@ func (h *EventHandler) authenticateSender(ctx context.Context, evt *events.Messa
 		Role:        string(usr.Role),
 		Email:       usr.Email,
 	})
+	if setWhatsAppContext {
+		chatJID := evt.Info.Chat.ToNonAD().String()
+		ctx = contextgroup.SetWhatsAppContext(ctx, &contextgroup.WhatsAppContext{
+			CurrentChatJID: chatJID,
+			SenderJID:      senderJID,
+		})
+	}
 
 	return ctx, nil
 }
@@ -157,7 +171,7 @@ func (h *EventHandler) authenticateGroup(ctx context.Context, evt *events.Messag
 
 	var err error
 	isSenderAuthenticated := true
-	ctx, err = h.authenticateSender(ctx, evt)
+	ctx, err = h.authenticateSender(ctx, evt, false)
 	if err != nil && err != errSenderNotAuthenticated {
 		return ctx, err
 	}
@@ -182,5 +196,5 @@ func (h *EventHandler) authenticateGroup(ctx context.Context, evt *events.Messag
 		SenderJID:      senderJID,
 	})
 
-	return h.authenticateSender(ctx, evt)
+	return ctx, nil
 }

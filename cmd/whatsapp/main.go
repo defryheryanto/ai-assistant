@@ -27,6 +27,7 @@ func main() {
 		GoogleTokenFilePath:       config.GoogleTokenFilePath,
 		OpenAIToken:               config.OpenAIToken,
 		OpenAIModel:               config.OpenAIModel,
+		WhatsAppClient:            client,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to setup service: %v", err))
