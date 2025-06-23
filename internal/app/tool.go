@@ -63,5 +63,5 @@ func registerTools(registry tools.Registry, srv *Services, waClient *whatsmeow.C
 	registry.Register(whatsapptool.NewRoleMiddlewareTool(whatsapptool.NewCreateUserTool(srv.UserService), allowedAdminRole))
 	registry.Register(whatsapptool.NewRoleMiddlewareTool(whatsapptool.NewRegisterGroupTool(srv.WhatsAppGroupService), allowedAdminRole))
 	imgTool := imagetool.NewGenerateImageTool(srv.OpenAIClient)
-	registry.Register(whatsapptool.NewImageWhatsAppDecorator(imgTool, waClient))
+	registry.Register(whatsapptool.NewGenerateImageTool(imgTool, waClient))
 }

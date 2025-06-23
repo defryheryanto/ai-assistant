@@ -15,21 +15,21 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// ImageWhatsAppDecorator sends generated image URLs to WhatsApp.
-type ImageWhatsAppDecorator struct {
+// GenerateImageTool sends generated image URLs to WhatsApp.
+type GenerateImageTool struct {
 	base   tools.Tool
 	client *whatsmeow.Client
 }
 
-// NewImageWhatsAppDecorator wraps a GenerateImageTool with WhatsApp delivery.
-func NewImageWhatsAppDecorator(base tools.Tool, client *whatsmeow.Client) *ImageWhatsAppDecorator {
-	return &ImageWhatsAppDecorator{base: base, client: client}
+// NewGenerateImageTool wraps another tool and forwards images to WhatsApp when possible.
+func NewGenerateImageTool(base tools.Tool, client *whatsmeow.Client) *GenerateImageTool {
+	return &GenerateImageTool{base: base, client: client}
 }
 
-func (t *ImageWhatsAppDecorator) SystemPrompt() string  { return t.base.SystemPrompt() }
-func (t *ImageWhatsAppDecorator) Definition() llms.Tool { return t.base.Definition() }
+func (t *GenerateImageTool) SystemPrompt() string  { return t.base.SystemPrompt() }
+func (t *GenerateImageTool) Definition() llms.Tool { return t.base.Definition() }
 
-func (t *ImageWhatsAppDecorator) Execute(ctx context.Context, call llms.ToolCall) (*llms.MessageContent, error) {
+func (t *GenerateImageTool) Execute(ctx context.Context, call llms.ToolCall) (*llms.MessageContent, error) {
 	resp, err := t.base.Execute(ctx, call)
 	if err != nil {
 		return resp, err
@@ -47,7 +47,7 @@ func (t *ImageWhatsAppDecorator) Execute(ctx context.Context, call llms.ToolCall
 	return resp, nil
 }
 
-func (t *ImageWhatsAppDecorator) sendImage(ctx context.Context, jidStr, url string) {
+func (t *GenerateImageTool) sendImage(ctx context.Context, jidStr, url string) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return

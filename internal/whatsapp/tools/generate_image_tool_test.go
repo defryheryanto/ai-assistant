@@ -11,30 +11,30 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestImageWhatsAppDecorator_SystemPrompt(t *testing.T) {
+func TestGenerateImageTool_SystemPrompt(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	base := pkgmock.NewMockTool(ctrl)
 	base.EXPECT().SystemPrompt().Return("base prompt").Times(1)
 
-	dec := tools.NewImageWhatsAppDecorator(base, nil)
+	dec := tools.NewGenerateImageTool(base, nil)
 	assert.Equal(t, "base prompt", dec.SystemPrompt())
 }
 
-func TestImageWhatsAppDecorator_Definition(t *testing.T) {
+func TestGenerateImageTool_Definition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	base := pkgmock.NewMockTool(ctrl)
 	base.EXPECT().Definition().Return(llms.Tool{Type: "function"}).Times(1)
 
-	dec := tools.NewImageWhatsAppDecorator(base, nil)
+	dec := tools.NewGenerateImageTool(base, nil)
 	def := dec.Definition()
 	assert.Equal(t, "function", def.Type)
 }
 
-func TestImageWhatsAppDecorator_Execute(t *testing.T) {
+func TestGenerateImageTool_Execute(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -44,7 +44,7 @@ func TestImageWhatsAppDecorator_Execute(t *testing.T) {
 
 	base.EXPECT().Execute(context.Background(), call).Return(resp, nil).Times(1)
 
-	dec := tools.NewImageWhatsAppDecorator(base, nil)
+	dec := tools.NewGenerateImageTool(base, nil)
 	out, err := dec.Execute(context.Background(), call)
 	assert.NoError(t, err)
 	assert.Equal(t, resp, out)
