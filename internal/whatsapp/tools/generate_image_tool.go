@@ -38,6 +38,7 @@ func (t *GenerateImageTool) Execute(ctx context.Context, call llms.ToolCall) (*l
 		waCtx := contextgroup.GetWhatsAppContext(ctx)
 		if waCtx != nil && resp != nil && len(resp.Parts) > 0 {
 			if r, ok := resp.Parts[0].(llms.ToolCallResponse); ok {
+				contextgroup.MarkMediaSent(ctx)
 				go t.sendImage(ctx, waCtx.CurrentChatJID, r.Content)
 			}
 		}

@@ -95,9 +95,16 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 				return
 			}
 
+			respCtx := &contextgroup.ResponseContext{}
+			ctx = contextgroup.SetResponseContext(ctx, respCtx)
+
 			resp, err := h.toolRegistry.Execute(ctx, v.Info.Chat.ToNonAD().String(), textMessage)
 			if err != nil {
 				log.Printf("error executing tool: %v\n", err)
+				return
+			}
+
+			if respCtx.MediaSent {
 				return
 			}
 
