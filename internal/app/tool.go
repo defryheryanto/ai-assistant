@@ -10,8 +10,10 @@ import (
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
 	calendartool "github.com/defryheryanto/ai-assistant/pkg/tools/calendar"
 	"github.com/defryheryanto/ai-assistant/pkg/tools/contextwindow"
+	imagetool "github.com/defryheryanto/ai-assistant/pkg/tools/image"
 	timetool "github.com/defryheryanto/ai-assistant/pkg/tools/time"
 	"github.com/tmc/langchaingo/llms/openai"
+	"go.mau.fi/whatsmeow"
 )
 
 type SetupToolsParams struct {
@@ -22,8 +24,9 @@ type SetupToolsParams struct {
 	GoogleTokenFilePath       string
 
 	// Registry
-	OpenAIToken string
-	OpenAIModel string
+	OpenAIToken    string
+	OpenAIModel    string
+	WhatsAppClient *whatsmeow.Client
 }
 
 func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *Services, error) {
@@ -47,16 +50,18 @@ func SetupTools(ctx context.Context, params SetupToolsParams) (tools.Registry, *
 		tools.WithSystemPromptOption(config.AssistantSystemPrompt),
 		tools.WithContextWindowManager(contextWindowManager),
 	)
-	registerTools(toolRegistry, srv)
+	registerTools(toolRegistry, srv, params.WhatsAppClient)
 
 	return toolRegistry, srv, nil
 }
 
-func registerTools(registry tools.Registry, srv *Services) {
+func registerTools(registry tools.Registry, srv *Services, waClient *whatsmeow.Client) {
 	registry.Register(calendartool.NewCreateEventTool(srv.CalendarService, false))
 	registry.Register(timetool.NewCurrentTimeTool())
 
 	allowedAdminRole := []whatsapp.UserRole{whatsapp.UserRoleAdmin}
 	registry.Register(whatsapptool.NewRoleMiddlewareTool(whatsapptool.NewCreateUserTool(srv.UserService), allowedAdminRole))
 	registry.Register(whatsapptool.NewRoleMiddlewareTool(whatsapptool.NewRegisterGroupTool(srv.WhatsAppGroupService), allowedAdminRole))
+	imgTool := imagetool.NewGenerateImageTool(srv.OpenAIClient)
+	registry.Register(whatsapptool.NewImageWhatsAppDecorator(imgTool, waClient))
 }
