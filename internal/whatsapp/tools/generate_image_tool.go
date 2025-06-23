@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/defryheryanto/ai-assistant/internal/contextgroup"
 	"github.com/defryheryanto/ai-assistant/pkg/tools"
@@ -63,15 +62,22 @@ func (t *GenerateImageTool) sendImage(ctx context.Context, jidStr, url string) {
 		return
 	}
 
-	parts := strings.Split(jidStr, "@")
-	jid := types.JID{User: parts[0], Server: parts[1]}
-	_, _ = t.client.SendMessage(ctx, jid, &waE2E.Message{
+	jid, err := types.ParseJID(jidStr)
+	if err != nil {
+		return
+	}
+	_, err = t.client.SendMessage(ctx, jid, &waE2E.Message{
 		ImageMessage: &waE2E.ImageMessage{
-			Url:        proto.String(upload.URL),
-			DirectPath: proto.String(upload.DirectPath),
-			MediaKey:   upload.MediaKey,
-			FileLength: proto.Uint64(uint64(len(data))),
-			Mimetype:   proto.String(resp.Header.Get("Content-Type")),
+			URL:           proto.String(upload.URL),
+			DirectPath:    proto.String(upload.DirectPath),
+			MediaKey:      upload.MediaKey,
+			FileLength:    proto.Uint64(uint64(len(data))),
+			Mimetype:      proto.String(resp.Header.Get("Content-Type")),
+			FileEncSHA256: upload.FileEncSHA256,
+			FileSHA256:    upload.FileSHA256,
 		},
 	})
+	if err != nil {
+		return
+	}
 }
