@@ -56,7 +56,8 @@ func (t *GenerateImageTool) Execute(ctx context.Context, toolCall llms.ToolCall)
 
 	resp, err := t.client.Images.Generate(ctx, openai.ImageGenerateParams{
 		Prompt: args.Prompt,
-		N:      openai.Int(1),
+		Model:  openai.ImageModelDallE3,
+		N:      openai.Int(5),
 	})
 	if err != nil {
 		return nil, err
