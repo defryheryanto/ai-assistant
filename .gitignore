@@ -25,4 +25,4 @@ token.json
 .vscode/*
 *.db
 *.wav
-
+.github/instructions
