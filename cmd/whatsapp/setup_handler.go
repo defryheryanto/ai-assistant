@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/defryheryanto/ai-assistant/config"
 	"github.com/defryheryanto/ai-assistant/internal/app"
@@ -58,6 +59,9 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 			textMessage := ""
 			switch {
 			case getMessage(v) != "":
+				if !hasActualText(v) {
+					return
+				}
 				textMessage = getMessage(v)
 			case v.Message.GetAudioMessage() != nil:
 				audioMessage := v.Message.GetAudioMessage()
@@ -129,6 +133,22 @@ func getMessage(evt *events.Message) string {
 	return ""
 }
 
+func hasActualText(evt *events.Message) bool {
+	text := getMessage(evt)
+	if text == "" {
+		return false
+	}
+	ext := evt.Message.GetExtendedTextMessage()
+	if ext != nil && ext.GetContextInfo() != nil {
+		for _, jid := range ext.GetContextInfo().GetMentionedJID() {
+			if idx := strings.Index(jid, "@"); idx > 0 {
+				number := jid[:idx]
+				text = strings.ReplaceAll(text, "@"+number, "")
+			}
+		}
+	}
+	return strings.TrimSpace(text) != ""
+}
 func (h *EventHandler) authenticateSender(ctx context.Context, evt *events.Message, setWhatsAppContext bool) (context.Context, error) {
 	senderJID := evt.Info.Sender.ToNonAD().String()
 	usr, err := h.services.UserService.GetByJID(ctx, senderJID)
