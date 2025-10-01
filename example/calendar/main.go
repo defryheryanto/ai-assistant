@@ -33,7 +33,7 @@ func main() {
 	}
 	toolRegistry.Register(calendar.NewCreateEventTool(calendarService, true))
 
-	inquiry := "I have a meeting with John Doe on October 2 2025, from 9 AM to 10 AM at Central Park. Please create a calendar event for this meeting and invite"
+	inquiry := "I have a meeting with John Doe on October 2 2025, from 9 AM to 10 AM at Central Park. Please create a calendar event for this meeting"
 	resp, err := toolRegistry.Execute(ctx, "default", inquiry)
 	if err != nil {
 		panic(err)
