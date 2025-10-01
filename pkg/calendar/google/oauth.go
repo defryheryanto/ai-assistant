@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/oauth2"
 )
@@ -18,10 +19,21 @@ type tokenSavingSource struct {
 
 func (s *tokenSavingSource) Token() (*oauth2.Token, error) {
 	tok, err := s.TokenSource.Token()
-	if err == nil {
-		saveToken(s.filePath, tok)
+	if err != nil {
+		return nil, err
 	}
-	return tok, err
+
+	if tok.RefreshToken == "" {
+		if existing, err := tokenFromFile(s.filePath); err == nil && existing.RefreshToken != "" {
+			tok.RefreshToken = existing.RefreshToken
+		}
+	}
+
+	if err := saveToken(s.filePath, tok); err != nil {
+		return nil, err
+	}
+
+	return tok, nil
 }
 
 func getClient(config *oauth2.Config, tokenFilePath string) (*http.Client, error) {
@@ -32,7 +44,9 @@ func getClient(config *oauth2.Config, tokenFilePath string) (*http.Client, error
 			return nil, err
 		}
 
-		saveToken(tokenFilePath, tok)
+		if err := saveToken(tokenFilePath, tok); err != nil {
+			return nil, err
+		}
 	}
 
 	tokenSource := config.TokenSource(context.Background(), tok)
@@ -80,12 +94,20 @@ func getTokenFromWeb(config *oauth2.Config) (*oauth2.Token, error) {
 func saveToken(path string, token *oauth2.Token) error {
 	log.Printf("Saving credential file to: %s\n", path)
 
+	if dir := filepath.Dir(path); dir != "." && dir != "" {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	json.NewEncoder(f).Encode(token)
+	if err := json.NewEncoder(f).Encode(token); err != nil {
+		return err
+	}
 	return nil
 }
