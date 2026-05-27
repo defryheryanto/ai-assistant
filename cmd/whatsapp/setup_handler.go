@@ -39,6 +39,15 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 				return
 			}
 
+			ctx, err = h.authenticateGroup(ctx, v)
+			if err != nil && err != errSenderNotAuthenticated && err != errGroupNotAuthenticated && err != errUserNotMentioned {
+				log.Printf("error authenticating group: %v\n", err)
+				return
+			}
+			if err == errUserNotMentioned || err == errGroupNotAuthenticated {
+				return
+			}
+
 			textMessage := ""
 			switch {
 			case getMessage(v) != "":
