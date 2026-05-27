@@ -36,24 +36,7 @@ func (h *EventHandler) Handle(ctx context.Context) whatsmeow.EventHandler {
 		case *events.Message:
 			var err error
 			if !v.Info.IsGroup {
-				ctx, err = h.authenticateSender(ctx, v, true)
-				if err != nil && err != errSenderNotAuthenticated {
-					log.Printf("error authenticating sender: %v\n", err)
-					return
-				}
-				if err == errSenderNotAuthenticated && config.IsUserWhitelistEnabled {
-					return
-				}
-			} else {
-				ctx, err = h.authenticateGroup(ctx, v)
-				if err != nil && err != errSenderNotAuthenticated && err != errGroupNotAuthenticated && err != errUserNotMentioned {
-					log.Printf("error authenticating group: %v\n", err)
-					return
-				}
-				if err == errUserNotMentioned || err == errGroupNotAuthenticated {
-					return
-				}
-
+				return
 			}
 
 			textMessage := ""
